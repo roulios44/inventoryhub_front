@@ -12,4 +12,14 @@ import HeadComponent from './components/HeadComponent.vue';
 </template>
 
 <style scoped>
+
+.container{
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+
+}
+
 </style>
