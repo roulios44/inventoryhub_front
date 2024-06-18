@@ -4,6 +4,8 @@ import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import FournisseursView from '@/views/FournisseursView.vue'
 
+import ListConsultationView from "@/views/ListConsultationView.vue"
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -23,9 +25,9 @@ const router = createRouter({
       component : RegisterView
     },
     {
-      path : "/fournisseurs",
-      name : "fournisseurs",
-      component : FournisseursView
+      path : "/:type",
+      name : "consultList",
+      component : ListConsultationView
     }
   ]
 })
