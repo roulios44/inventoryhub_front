@@ -3,26 +3,41 @@
     <h1 class="mb-4 text-primary">{{ capitalizeFirstLetter(type) }}</h1>
     <form @submit.prevent="handleSubmit">
       <div class="mb-3" v-for="field in structure" :key="field.name">
-        <label :for="field.name" class="form-label text-secondary">{{
-          field.name
-        }}</label>
+        <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label>
         <input
           type="text"
           :id="field.name"
           class="form-control"
           v-model="field.value"
           :placeholder="field.name"
+          :required="field.type != 'image'"
+          
         />
       </div>
       <button type="submit" class="btn btn-custom">Submit</button>
     </form>
+    <div class="toast align-items-center text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true" v-if="showSuccess">
+      <div class="d-flex">
+        <div class="toast-body">
+          L'enregistrement a réussi !
+        </div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="toast align-items-center text-white bg-danger" role="alert" aria-live="assertive" aria-atomic="true" v-if="showError">
+      <div class="d-flex">
+        <div class="toast-body">
+          Échec de l'enregistrement.
+        </div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL;
-const contextApiUrl = apiUrl + "/fournisseurs";
 const apiStructUrl = import.meta.env.VITE_API_STRUCT_URL;
 
 export default {
@@ -30,6 +45,8 @@ export default {
     return {
       type: "",
       structure: null,
+      showSuccess: false,
+      showError: false,
     };
   },
   methods: {
@@ -47,22 +64,29 @@ export default {
           .filter((field) => field.name !== "id" && field.type !== "Set")
           .map((field) => ({ ...field, value: "" }));
       } catch (error) {
+        console.error("Erreur lors de la récupération de la structure de l'objet :", error);
         if (error.response && error.response.status === 404) {
           this.$router.push("/");
         }
       }
     },
     async handleSubmit() {
-      const data = new Object();
-      this.structure.map((field) => (data[field.name] = field.value));
-      const req = await axios.post(apiUrl + "/" + this.type + "s", data);
-      const res = await req.data;
-      console.log(res);
+      const data = {};
+      this.structure.forEach((field) => (data[field.name] = field.value));
+
+      try {
+        const response = await axios.post(`${apiUrl}/${this.type}s`, data);
+        this.showSuccess = true;
+        this.showError = false;
+      } catch (error) {
+        console.error("Erreur lors de l'enregistrement :", error);
+        this.showSuccess = false;
+        this.showError = true;
+      }
     },
   },
   async mounted() {
     this.type = this.getType();
-    console.log(this.type);
     await this.getObjectStruct();
   },
 };
@@ -113,5 +137,13 @@ h1 {
 
 .secondary-bg {
   background-color: #ffa500;
+}
+
+.toast {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 300px;
+  z-index: 1100;
 }
 </style>
