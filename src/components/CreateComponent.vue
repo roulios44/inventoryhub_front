@@ -37,6 +37,7 @@
 
 <script>
 import axios from "axios";
+import Cookies from "js-cookie";
 const apiUrl = import.meta.env.VITE_API_URL;
 const apiStructUrl = import.meta.env.VITE_API_STRUCT_URL;
 
@@ -58,7 +59,14 @@ export default {
     },
     async getObjectStruct() {
       try {
-        const req = await axios.get(`${apiStructUrl}/${this.type}`);
+        const headers = {
+          "Authorization" : "Bearer " + Cookies.get("token"),
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+        const req = await axios.get(`${apiStructUrl}/${this.type}`,{
+          headers : headers
+        });
         const res = req.data;
         this.structure = res
           .filter((field) => field.name !== "id" && field.type !== "Set")
@@ -75,7 +83,14 @@ export default {
       this.structure.forEach((field) => (data[field.name] = field.value));
 
       try {
-        const response = await axios.post(`${apiUrl}/${this.type}s`, data);
+        const headers = {
+          "Authorization" : "Bearer " + Cookies.get("token"),
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+        const response = await axios.post(`${apiUrl}/${this.type}s`, data,{
+          headers : headers
+        });
         this.showSuccess = true;
         this.showError = false;
       } catch (error) {
@@ -86,6 +101,7 @@ export default {
     },
   },
   async mounted() {
+    if(Cookies.get("token")===undefined)this.$router.push("/login")
     this.type = this.getType();
     await this.getObjectStruct();
   },

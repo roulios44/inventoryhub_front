@@ -2,8 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
-import FournisseursView from "@/views/FournisseursView.vue";
 import ListConsultView from "@/views/ListConsultView.vue";
+import DetailsView from "@/views/DetailsView.vue";
 
 import CreateComponent from "@/components/CreateComponent.vue";
 const router = createRouter({
@@ -34,6 +34,11 @@ const router = createRouter({
       name: "consultList",
       component: ListConsultView,
     },
+    {
+      path: "/:type/details/:entityID",
+      name: "details",
+      component: DetailsView,
+    }
   ],
 });
 
