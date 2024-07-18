@@ -3,16 +3,17 @@
     <h1 class="mb-4 text-primary">{{ capitalizeFirstLetter(type) }}</h1>
     <form @submit.prevent="handleSubmit">
       <div class="mb-3" v-for="field in structure" :key="field.name">
-        <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label>
-        <input
-          type="text"
-          :id="field.name"
-          class="form-control"
-          v-model="field.value"
-          :placeholder="field.name"
-          :required="field.type != 'image'"
-          
-        />
+        <div v-if="detectedNonNative(field.type)">
+          <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label>
+          <input
+            type="text"
+            :id="field.name"
+            class="form-control"
+            v-model="field.value"
+            :placeholder="field.name"
+            :required="field.type != 'image'"
+          />
+        </div>
       </div>
       <button type="submit" class="btn btn-custom">Submit</button>
     </form>
@@ -99,11 +100,17 @@ export default {
         this.showError = true;
       }
     },
+    detectedNonNative(type){
+      const nativeTypes = ["Long", "String", "Integer", "Boolean", "Double", "Float", "Character", "Byte", "Short"]
+      if(nativeTypes.includes(type))return true
+      return false
+    }
   },
   async mounted() {
     if(Cookies.get("token")===undefined)this.$router.push("/login")
     this.type = this.getType();
     await this.getObjectStruct();
+    this.detectedNonNative()
   },
 };
 </script>
