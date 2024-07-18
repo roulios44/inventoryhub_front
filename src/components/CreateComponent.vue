@@ -3,9 +3,10 @@
     <h1 class="mb-4 text-primary">{{ capitalizeFirstLetter(type) }}</h1>
     <form @submit.prevent="handleSubmit">
       <div class="mb-3" v-for="field in structure" :key="field.name">
-        <div v-if="detectedNonNative(field.type)">
+        <div v-if="(detectedNonNative(field.type)|| field.type=='Role')">
           <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label>
           <input
+            v-if="field.type != 'Role'"
             type="text"
             :id="field.name"
             class="form-control"
@@ -13,6 +14,9 @@
             :placeholder="field.name"
             :required="field.type != 'image'"
           />
+          <select v-else v-model="field.value" class="form-control" required>
+            <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.description }}</option>
+          </select>
         </div>
       </div>
       <button type="submit" class="btn btn-custom">Submit</button>
@@ -49,6 +53,7 @@ export default {
       structure: null,
       showSuccess: false,
       showError: false,
+      roles: [] 
     };
   },
   methods: {
@@ -65,17 +70,20 @@ export default {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
-        const req = await axios.get(`${apiStructUrl}/${this.type}`,{
-          headers : headers
+        const req = await axios.get(`${apiStructUrl}/${this.type}`, {
+          headers: headers
         });
         const res = req.data;
         this.structure = res
           .filter((field) => field.name !== "id" && field.type !== "Set")
           .map((field) => ({ ...field, value: "" }));
+
+        await this.getRoles();
+
       } catch (error) {
         console.error("Erreur lors de la récupération de la structure de l'objet :", error);
         if (error.response && error.response.status === 404) {
-          this.$router.push("/");
+          // this.$router.push("/");
         }
       }
     },
@@ -89,8 +97,8 @@ export default {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
-        const response = await axios.post(`${apiUrl}/${this.type}s`, data,{
-          headers : headers
+        await axios.post(`${apiUrl}/${this.type}s`, data, {
+          headers: headers
         });
         this.showSuccess = true;
         this.showError = false;
@@ -100,17 +108,31 @@ export default {
         this.showError = true;
       }
     },
-    detectedNonNative(type){
+    async getRoles() {
+      try {
+        const headers = {
+          "Authorization" : "Bearer " + Cookies.get("token"),
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+        const res = await axios.get(`${apiUrl}/roles`, {
+          headers: headers
+        });
+        console.log(res.data._embedded.roles)
+        this.roles = res.data._embedded.roles;
+      } catch (error) {
+        console.error("Erreur lors de la récupération des rôles :", error);
+      }
+    },
+    detectedNonNative(type) {
       const nativeTypes = ["Long", "String", "Integer", "Boolean", "Double", "Float", "Character", "Byte", "Short"]
-      if(nativeTypes.includes(type))return true
-      return false
+      return (nativeTypes.includes(type));
     }
   },
   async mounted() {
-    if(Cookies.get("token")===undefined)this.$router.push("/login")
+    // if (Cookies.get("token") === undefined) this.$router.push("/login")
     this.type = this.getType();
     await this.getObjectStruct();
-    this.detectedNonNative()
   },
 };
 </script>
