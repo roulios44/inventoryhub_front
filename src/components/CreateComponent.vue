@@ -1,7 +1,7 @@
 <template>
   <div class="container mt-5">
     <h1 class="mb-4 text-primary">{{ capitalizeFirstLetter(type) }}</h1>
-    <form @submit.prevent="handleSubmit">
+    <form @submit.prevent="createEntity">
       <div class="mb-3" v-for="field in structure" :key="field.name">
         <div v-if="(detectedNonNative(field.type)|| field.type=='Role')">
           <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label>
@@ -83,21 +83,22 @@ export default {
       } catch (error) {
         console.error("Erreur lors de la récupération de la structure de l'objet :", error);
         if (error.response && error.response.status === 404) {
-          // this.$router.push("/");
+          this.$router.push("/");
         }
       }
     },
-    async handleSubmit() {
+    async createEntity() {
       const data = {};
       this.structure.forEach((field) => (data[field.name] = field.value));
-
+      console.log(data)
       try {
         const headers = {
           "Authorization" : "Bearer " + Cookies.get("token"),
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
-        await axios.post(`${apiUrl}/${this.type}s`, data, {
+        const url = apiUrl + (this.type == 'user'?"/auth/signup":`${this.type}s`) 
+        await axios.post(url, data, {
           headers: headers
         });
         this.showSuccess = true;
@@ -118,7 +119,6 @@ export default {
         const res = await axios.get(`${apiUrl}/roles`, {
           headers: headers
         });
-        console.log(res.data._embedded.roles)
         this.roles = res.data._embedded.roles;
       } catch (error) {
         console.error("Erreur lors de la récupération des rôles :", error);
@@ -130,7 +130,7 @@ export default {
     }
   },
   async mounted() {
-    // if (Cookies.get("token") === undefined) this.$router.push("/login")
+    if (Cookies.get("token") === undefined) this.$router.push("/login")
     this.type = this.getType();
     await this.getObjectStruct();
   },
