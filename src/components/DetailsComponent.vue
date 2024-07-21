@@ -22,7 +22,7 @@
                   <div class="collapse" :id="`collapseLinks${key}`">
                     <ul class="list-group mt-2">
                         <li v-if="filterLinks(key)" class="list-group-item">
-                          <a :href="link.href" target="_blank">{{ formatKey(key) }}</a>
+                          <p>{{ key }}</p>
                         </li>
                       </ul>
                     </div>

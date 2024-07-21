@@ -3,25 +3,22 @@
     <h1 class="mb-4 text-primary">{{ capitalizeFirstLetter(type) }}</h1>
     <form @submit.prevent="createEntity">
       <div class="mb-3" v-for="field in structure" :key="field.name">
-        <div v-if="(detectedNonNative(field.type)|| field.type=='Role')">
+        <div>
           <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label>
-          <input
-            v-if="field.type != 'Role'"
-            type="text"
-            :id="field.name"
-            class="form-control"
-            v-model="field.value"
-            :placeholder="field.name"
-            :required="field.type != 'image'"
-          />
-          <select v-else v-model="field.value" class="form-control" required>
-            <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.description }}</option>
-          </select>
+          <input v-if="field.type != 'Role'" type="text" :id="field.name" class="form-control" v-model="field.value"
+            :placeholder="field.name" :required="field.type != 'image'" />
         </div>
+      </div>
+      <div v-for="entity in relatedEntities">
+        <!-- <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label> -->
+        <select class="form-control" required>
+          <option v-for="key in entity">{{ key }}</option>
+        </select>
       </div>
       <button type="submit" class="btn btn-custom">Submit</button>
     </form>
-    <div class="toast align-items-center text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true" v-if="showSuccess">
+    <div class="toast align-items-center text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true"
+      v-if="showSuccess">
       <div class="d-flex">
         <div class="toast-body">
           L'enregistrement a réussi !
@@ -29,7 +26,8 @@
         <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
     </div>
-    <div class="toast align-items-center text-white bg-danger" role="alert" aria-live="assertive" aria-atomic="true" v-if="showError">
+    <div class="toast align-items-center text-white bg-danger" role="alert" aria-live="assertive" aria-atomic="true"
+      v-if="showError">
       <div class="d-flex">
         <div class="toast-body">
           Échec de l'enregistrement.
@@ -53,7 +51,7 @@ export default {
       structure: null,
       showSuccess: false,
       showError: false,
-      roles: [] 
+      relatedEntities: []
     };
   },
   methods: {
@@ -66,19 +64,18 @@ export default {
     async getObjectStruct() {
       try {
         const headers = {
-          "Authorization" : "Bearer " + Cookies.get("token"),
+          "Authorization": "Bearer " + Cookies.get("token"),
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
-        const req = await axios.get(`${apiStructUrl}/${this.type}`, {
+        const req = await axios.get(`${apiUrl}/api/dtos/${this.type}`, {
           headers: headers
         });
         const res = req.data;
-        this.structure = res
-          .filter((field) => field.name !== "id" && field.type !== "Set")
+        console.log(res)
+        this.structure = req.data
+          .filter((field) => field.name !== "id")
           .map((field) => ({ ...field, value: "" }));
-
-        await this.getRoles();
 
       } catch (error) {
         console.error("Erreur lors de la récupération de la structure de l'objet :", error);
@@ -90,14 +87,14 @@ export default {
     async createEntity() {
       const data = {};
       this.structure.forEach((field) => (data[field.name] = field.value));
-      console.log(data)
       try {
         const headers = {
-          "Authorization" : "Bearer " + Cookies.get("token"),
+          "Authorization": "Bearer " + Cookies.get("token"),
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
-        const url = apiUrl + (this.type == 'user'?"/auth/signup":`${this.type}s`) 
+        const url = apiUrl + (this.type == 'user' ? "/auth/signup" : `/${this.type}s`)
+        console.log(data)
         await axios.post(url, data, {
           headers: headers
         });
@@ -109,30 +106,35 @@ export default {
         this.showError = true;
       }
     },
-    async getRoles() {
+    async getEntityRelation(key) {
+      //TODO Faire un tri des nom de clé qui ne serrait pas a display ( sur les relations 1 to many généralement a voir sur le diagramme de MERISE)
       try {
         const headers = {
-          "Authorization" : "Bearer " + Cookies.get("token"),
+          "Authorization": "Bearer " + Cookies.get("token"),
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
-        const res = await axios.get(`${apiUrl}/roles`, {
+        const res = await axios.get(`${apiUrl}/${key}s/all`, {
           headers: headers
         });
-        this.roles = res.data._embedded.roles;
+        res.data.type = key
+        console.log(res.data)
+        this.relatedEntities.push(res.data)
+        console.log(key)
       } catch (error) {
         console.error("Erreur lors de la récupération des rôles :", error);
       }
     },
     detectedNonNative(type) {
-      const nativeTypes = ["Long", "String", "Integer", "Boolean", "Double", "Float", "Character", "Byte", "Short"]
-      return (nativeTypes.includes(type));
+      const nativeTypes = ["long", "string", "integer", "boolean", "double", "float", "character", "byte", "short"]
+      return (nativeTypes.includes(type.toLowerCase()));
     }
   },
   async mounted() {
     if (Cookies.get("token") === undefined) this.$router.push("/login")
     this.type = this.getType();
     await this.getObjectStruct();
+    await this.structure.map(async (field) => { if (field.type == "Long") await this.getEntityRelation(field.name) })
   },
 };
 </script>
