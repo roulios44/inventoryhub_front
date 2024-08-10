@@ -1,19 +1,20 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import HeadComponent from './components/HeadComponent.vue';
+import HeaderComponent from './components/HeaderComponent.vue';
 
 </script>
 
 <template>
   <HeadComponent />
+  <HeaderComponent />
   <div class="container">
     <RouterView />
   </div>
 </template>
 
 <style scoped>
-
-.container{
+.container {
   display: flex;
   flex-direction: column;
   align-content: center;
@@ -21,5 +22,4 @@ import HeadComponent from './components/HeadComponent.vue';
   align-items: center;
 
 }
-
 </style>

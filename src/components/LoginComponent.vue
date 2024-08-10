@@ -20,7 +20,8 @@
             </div>
           </div>
 
-          <button type="submit" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-block mb-4" v-on:click="login">Sign in</button>
+          <button type="submit" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-block mb-4"
+            v-on:click="login">Sign in</button>
         </div>
         <div class="alert alert-warning" role="alert" v-if="errorMessage != null">
           {{ errorMessage }}
@@ -54,8 +55,8 @@ export default {
           const expiresIn = req.data.expiresIn
           const expirationDate = new Date(new Date().getTime() + expiresIn);
           Cookies.set('token', token, { expires: expirationDate, secure: true, sameSite: 'Strict' });
-          console.log(Cookies.get("token"))
           this.errorMessage = null;
+          this.$router.push("/")
         } else if (req.status === 403) {
           this.errorMessage = "Identifiant ou mot de passe incorrects";
         } else {
