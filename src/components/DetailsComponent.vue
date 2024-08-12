@@ -4,37 +4,46 @@
       <h1>{{ type }}</h1>
     </header>
     <div v-if="entity" class="row justify-content-center">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h1 class="card-title">{{ entity.title || `${formatKey(this.type.slice(0,-1))}` }}</h1>
-            <ul class="list-group list-group-flush">
-              <div v-for="(value, key) in entity" :key="key">
-                <li  class="list-group-item" v-if="key != 'links' && key != 'password'">
-                  <strong>{{ formatKey(key) }}</strong> {{ value }}
-                </li>
-              </div>
-              <li v-if="entity.links && hasOtherKeys(entity.links)" class="list-group-item">
-                <button v-for="(link, key) in entity.links" :key="key" class="btn btn-link" type="button" data-bs-toggle="collapse" :data-bs-target="`#collapseLinks${key}`" aria-expanded="false" aria-controls="collapseLinks">
-                  <i class="bi bi-chevron-down">{{ key }}</i> 
-                </button>
-                <!-- contenue collaspe  -->
-                <div v-for="(link, key) in entity.links" :key="key">
-                  <div class="collapse" :id="`collapseLinks${key}`">
-                    <ul class="list-group mt-2">
-                        <li v-if="filterLinks(key)" class="list-group-item">
-                          <p>{{ key }}</p>
-                        </li>
-                      </ul>
-                    </div>
-                </div>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="card-title">{{ entity.title || `${formatKey(this.type.slice(0, -1))}` }}</h1>
+
+          <!-- Boutons pour passer en mode édition et enregistrer les modifications -->
+          <button v-if="!isEditing" class="btn btn-secondary mt-3" @click="isEditing = true">Edit</button>
+          <button v-if="isEditing" class="btn btn-primary mt-3" @click="saveChanges">Save</button>
+
+          <ul class="list-group list-group-flush">
+            <div v-for="(value, key) in entity" :key="key">
+              <li class="list-group-item" v-if="key != 'links' && key != 'password'">
+                <strong>{{ formatKey(key) }}</strong>
+                <span v-if="!isEditing">{{ value }}</span>
+                <input v-if="isEditing && formatKey(key) !== 'Id'" v-model="entity[key]" class="form-control" />
               </li>
-            </ul>
-            <div v-if="type=='Article'">
-              <p class="h4 text-danger" >{{ formattedPrice }}</p>
-              <button class="btn btn-primary mt-3" @click="addToCart">Add to cart</button>
             </div>
+            <li v-if="entity.links && hasOtherKeys(entity.links)" class="list-group-item">
+              <button v-for="(link, key) in entity.links" :key="key" class="btn btn-link" type="button"
+                data-bs-toggle="collapse" :data-bs-target="`#collapseLinks${key}`" aria-expanded="false"
+                aria-controls="collapseLinks">
+                <i class="bi bi-chevron-down">{{ key }}</i>
+              </button>
+              <div v-for="(link, key) in entity.links" :key="key">
+                <div class="collapse" :id="`collapseLinks${key}`">
+                  <ul class="list-group mt-2">
+                    <li v-if="filterLinks(key)" class="list-group-item">
+                      <p>{{ key }}</p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          <div v-if="type == 'Article'">
+            <p class="h4 text-danger">{{ formattedPrice }}</p>
+            <button class="btn btn-primary mt-3" @click="addToCart">Add to cart</button>
           </div>
         </div>
+      </div>
     </div>
   </div>
 </template>
@@ -50,6 +59,7 @@ export default {
       type: null,
       entityID: null,
       entity: null,
+      isEditing: false, // Pour suivre si nous sommes en mode édition
     };
   },
   methods: {
@@ -68,10 +78,10 @@ export default {
         };
         const req = await axios.get(`${apiUrl}/${this.type}/${this.entityID}`, { headers: headers });
         this.entity = req.data;
-        this.entity.links = this.entity._links
-        delete this.entity._links
-        delete this.entity.links.self
-        delete this.entity.links[this.type.slice(0,-1)]
+        this.entity.links = this.entity._links;
+        delete this.entity._links;
+        delete this.entity.links.self;
+        delete this.entity.links[this.type.slice(0, -1)];
         console.log(this.entity);
       } catch (error) {
         if (error.response && (error.response.status === 404 || error.response.status === 403)) {
@@ -79,13 +89,27 @@ export default {
         }
       }
     },
-    filterLinks(key){
-      console.log(key)
-      return!(key=="self" || key==this.type.slice(0,-1))
+    filterLinks(key) {
+      console.log(key);
+      return !(key == "self" || key == this.type.slice(0, -1));
     },
-    hasOtherKeys(){
+    hasOtherKeys() {
       const keys = Object.keys(this.entity.links);
-      return keys.some(key=>key!="self" && key != this.type.slice(0,-1))
+      return keys.some(key => key != "self" && key != this.type.slice(0, -1));
+    },
+    async saveChanges() {
+      try {
+        const headers = {
+          "Authorization": "Bearer " + Cookies.get("token"),
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        };
+        await axios.put(`${apiUrl}/${this.type}/${this.entityID}`, this.entity, { headers: headers });
+        this.isEditing = false;
+        console.log('Changes saved successfully');
+      } catch (error) {
+        console.error('Error saving changes:', error);
+      }
     },
     addToCart() {
       // Logique pour ajouter le produit au panier
@@ -107,29 +131,32 @@ export default {
     }
   },
   async mounted() {
-    if (Cookies.get("token") === undefined) this.$router.push("/login")
+    if (Cookies.get("token") === undefined) this.$router.push("/login");
     this.type = this.getType();
     this.entityID = this.getEntityID();
     await this.getEntry();
-  },
+  }
 };
 </script>
-
 
 <style scoped>
 .card-body {
   width: fit-content;
 }
+
 .card-title {
   margin-bottom: 20px;
 }
+
 .list-group-item {
   display: flex;
   justify-content: space-between;
 }
+
 .h4.text-danger {
   margin-top: 20px;
 }
+
 button {
   margin-top: 20px;
   padding: 10px 20px;
@@ -140,14 +167,21 @@ button {
   border-radius: 4px;
   cursor: pointer;
 }
+
 button:hover {
   background-color: #d81b60;
 }
+
 a {
   color: #007bff;
 }
+
 a:hover {
   color: #0056b3;
   text-decoration: underline;
+}
+
+.form-control {
+  width: 100%;
 }
 </style>

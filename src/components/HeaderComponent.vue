@@ -17,7 +17,7 @@
       <div class="offcanvas-body">
         <ul class="nav flex-column">
           <li v-for="service in allowedEndpoints" :key="service" class="nav-item">
-            <a class="nav-link" v-on:click="redirectToService(service.toLowerCase())">{{ service }}</a>
+            <a class="nav-link" @click="redirectToService(service.toLowerCase())">{{ service }}</a>
           </li>
         </ul>
       </div>
@@ -26,6 +26,8 @@
 </template>
 
 <script>
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+import 'bootstrap/dist/css/bootstrap.min.css'
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { Offcanvas } from 'bootstrap';
@@ -42,24 +44,25 @@ export default {
   methods: {
     async getAllowedEndpoints() {
       const headers = {
-        "Authorization": "Bearer " + Cookies.get("token"),
+        Authorization: 'Bearer ' + Cookies.get('token'),
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       };
       try {
-        const req = await axios.get(apiUrl + "/secured-endpoints", {
+        const req = await axios.get(apiUrl + '/secured-endpoints', {
           headers: headers
         });
-        this.allowedEndpoints = req.data;
+        // Réassigner le tableau pour déclencher la réactivité
+        this.allowedEndpoints = [...req.data];
+        this.$forceUpdate()
       } catch (error) {
         console.error('Failed to fetch allowed endpoints', error);
       }
     },
     redirectToService(service) {
       this.$router.push(`/${service}`);
-      this.offcanvasInstance.hide(); // Close the offcanvas menu
+      this.offcanvasInstance.hide();
 
-      // Check and remove backdrop only if it exists (Bootstrap should handle this)
       const backdrop = document.querySelector('.offcanvas-backdrop');
       if (backdrop && backdrop.parentNode) {
         backdrop.parentNode.removeChild(backdrop);
@@ -68,16 +71,11 @@ export default {
     isHiddenRoute() {
       return this.$route.path === '/login';
     }
-
   },
   mounted() {
-    this.isHiddenRoute()
-    if (!Cookies.get("token")) {
-      this.$router.push("/login");
-    } else {
+    if (!this.isHiddenRoute() && Cookies.get('token')) {
       this.getAllowedEndpoints();
     }
-    // Initialize Bootstrap Offcanvas
     this.offcanvasInstance = new Offcanvas(this.$refs.offcanvas);
   },
 };

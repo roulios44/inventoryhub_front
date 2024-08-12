@@ -4,7 +4,7 @@
       <h1>{{ type }}</h1>
       <!-- Barre de recherche -->
       <div class="mb-4">
-        <input type="text" class="form-control d-inline-block" v-model="searchQuery" @input="filterEntries"
+        <input type="text" class="form-control d-inline-block" v-model="searchQuery" @input="searchEntity"
           :placeholder="`Search ${type}`" />
       </div>
     </header>
@@ -12,8 +12,8 @@
       <!-- Contenu principal -->
       <div class="col-12">
         <div v-if="serverResponse">
-          <div v-if="filterEntries.length <= 0">
-            <p>Aucune donnée de créée</p>
+          <div v-if="filteredEntities.length <= 0">
+            <p>Aucune donnée trouvée</p>
           </div>
           <div v-for="entity in filteredEntities" :key="entity.id" @click="toDetails(entity.id)" class="mb-3">
             <div class="card">
@@ -50,9 +50,10 @@ export default {
     const entities = ref([]);
     const filteredEntities = ref([]);
     const searchQuery = ref("");
-    const serverResponse = ref(false)
+    const serverResponse = ref(false);
+    const searchEndpoints = ref({});
 
-    // Fonction pour récupérer les entrées
+    // Fonction pour récupérer les entrées initiales
     const getEntries = async () => {
       try {
         const headers = {
@@ -64,7 +65,7 @@ export default {
         const res = req.data;
         entities.value = res._embedded[type.value];
         filteredEntities.value = entities.value;
-        serverResponse.value = true
+        serverResponse.value = true;
       } catch (error) {
         if (error.response && (error.response.status === 404 || error.response.status === 403)) {
           router.push("/");
@@ -72,16 +73,62 @@ export default {
       }
     };
 
-    // Fonction de filtrage des entrées
-    const filterEntries = () => {
-      const query = searchQuery.value.toLowerCase();
-      filteredEntities.value = entities.value.filter(entity => {
-        return entity.name.toLowerCase().includes(query) ||
-          (entity.description && entity.description.toLowerCase().includes(query));
-      });
+    const searchEntity = async () => {
+      const query = searchQuery.value.trim();
+      if (!query) {
+        filteredEntities.value = entities.value;
+        return;
+      }
+
+      for (const key in searchEndpoints.value) {
+        try {
+          const hrefTemplate = searchEndpoints.value[key].href;
+          const paramMatch = hrefTemplate.match(/{\?(.*)}/);
+
+          if (paramMatch) {
+            const paramName = paramMatch[1]; // Extrait le nom du paramètre (par ex. 'title')
+            const searchUrl = hrefTemplate.replace(paramMatch[0], `?${paramName}=${encodeURIComponent(query)}`);
+
+            // Construct the correct URL
+            const fullUrl = `${searchUrl}`;
+
+            const headers = {
+              "Authorization": "Bearer " + Cookies.get("token"),
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            };
+            const req = await axios.get(fullUrl, { headers });
+            const res = req.data;
+            filteredEntities.value = res._embedded[type.value];
+            return;
+          }
+        } catch (error) {
+          console.error(`Error searching with ${key}:`, error);
+          // Continue to the next search endpoint if the current one fails
+        }
+      }
+
+      filteredEntities.value = [];
     };
 
-    // Fonction pour naviguer vers les détails
+
+    const getSearchEndpoints = async () => {
+      try {
+        const headers = {
+          "Authorization": "Bearer " + Cookies.get("token"),
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        };
+        const req = await axios.get(`${apiUrl}/${type.value}/search`, { headers });
+
+        const res = req.data._links;
+        delete res.self; // Supprime le lien "self"
+        searchEndpoints.value = res;
+      } catch (error) {
+        console.error("Error fetching search endpoints:", error);
+      }
+    };
+
     const toDetails = (idEntity) => {
       router.push(`/${type.value}/details/${idEntity}`);
     };
@@ -90,19 +137,21 @@ export default {
     watch(() => route.params.type, (newType) => {
       type.value = newType;
       getEntries();
+      getSearchEndpoints();
     });
 
     // Appel initial lors du montage
     onMounted(() => {
       if (!Cookies.get("token")) router.push("/login");
       getEntries();
+      getSearchEndpoints();
     });
 
     return {
       type,
       filteredEntities,
       searchQuery,
-      filterEntries,
+      searchEntity,
       toDetails,
       serverResponse,
     };

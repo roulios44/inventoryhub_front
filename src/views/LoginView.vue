@@ -1,18 +1,21 @@
 <template>
-  <LoginComponent />
+  <HeaderComponent ref="header" />
+  <LoginComponent @login-success="refreshHeader" />
 </template>
 
 <script>
 import LoginComponent from '@/components/LoginComponent.vue';
-  export default {
-    data() {
-      return {
-      };
-    },
-    methods: {
-    },
-    components : {
-      LoginComponent
+import HeaderComponent from '@/components/HeaderComponent.vue';
+
+export default {
+  methods: {
+    refreshHeader() {
+      this.$refs.header.getAllowedEndpoints();
     }
-  };
+  },
+  components: {
+    HeaderComponent,
+    LoginComponent
+  }
+};
 </script>
