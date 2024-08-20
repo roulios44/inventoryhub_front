@@ -19,6 +19,9 @@
           <li v-for="service in allowedEndpoints" :key="service" class="nav-item">
             <a class="nav-link" @click="redirectToService(service.toLowerCase())">{{ service }}</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" @click="redirectToService('profile')">Profile</a>
+          </li>
         </ul>
       </div>
     </div>
@@ -52,9 +55,8 @@ export default {
         const req = await axios.get(apiUrl + '/secured-endpoints', {
           headers: headers
         });
-        // Réassigner le tableau pour déclencher la réactivité
         this.allowedEndpoints = [...req.data];
-        this.$forceUpdate()
+        this.$forceUpdate();
       } catch (error) {
         console.error('Failed to fetch allowed endpoints', error);
       }
@@ -78,6 +80,13 @@ export default {
     }
     this.offcanvasInstance = new Offcanvas(this.$refs.offcanvas);
   },
+  watch: {
+    '$route'() {
+      if (!this.isHiddenRoute() && Cookies.get('token')) {
+        this.getAllowedEndpoints();
+      }
+    }
+  }
 };
 </script>
 

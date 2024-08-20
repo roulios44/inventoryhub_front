@@ -1,13 +1,24 @@
 <template>
   <div class="container mt-5">
     <header class="page-header mb-4 text-center">
-      <h1>{{ type }}</h1>
-      <!-- Barre de recherche -->
-      <div class="mb-4">
-        <input type="text" class="form-control d-inline-block" v-model="searchQuery" @input="searchEntity"
-          :placeholder="`Search ${type}`" />
+      <h1 class="mb-4">{{ type }}</h1>
+
+      <!-- Barre de recherche et bouton -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="w-50 h-50 mx-auto">
+          <input type="text" class="form-control" v-model="searchQuery" @input="searchEntity"
+            :placeholder="`Search ${type}`" aria-label="Search {{ type }}" />
+        </div>
+        <button class="btn btn-primary ms-3" type="button" @click="redirectCreate">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-plus"
+            viewBox="0 0 16 16">
+            <path
+              d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+          </svg>
+        </button>
       </div>
     </header>
+
     <div class="row">
       <!-- Contenu principal -->
       <div class="col-12">
@@ -33,6 +44,8 @@
     </div>
   </div>
 </template>
+
+
 
 <script>
 import { ref, onMounted, watch } from 'vue';
@@ -72,6 +85,10 @@ export default {
         }
       }
     };
+
+    const redirectCreate = () => {
+      router.push(`/create/${type.value.slice(0, -1)}`)
+    }
 
     const searchEntity = async () => {
       const query = searchQuery.value.trim();
@@ -122,7 +139,7 @@ export default {
         const req = await axios.get(`${apiUrl}/${type.value}/search`, { headers });
 
         const res = req.data._links;
-        delete res.self; // Supprime le lien "self"
+        if (typeof (res.self) === typeof (undefined)) delete res.self; // Supprime le lien "self"
         searchEndpoints.value = res;
       } catch (error) {
         console.error("Error fetching search endpoints:", error);
@@ -154,6 +171,7 @@ export default {
       searchEntity,
       toDetails,
       serverResponse,
+      redirectCreate,
     };
   }
 };

@@ -8,7 +8,6 @@
         <div class="card-body">
           <h1 class="card-title">{{ entity.title || `${formatKey(this.type.slice(0, -1))}` }}</h1>
 
-          <!-- Boutons pour passer en mode édition et enregistrer les modifications -->
           <button v-if="!isEditing" class="btn btn-secondary mt-3" @click="isEditing = true">Edit</button>
           <button v-if="isEditing" class="btn btn-primary mt-3" @click="saveChanges">Save</button>
 
@@ -26,11 +25,11 @@
                 aria-controls="collapseLinks">
                 <i class="bi bi-chevron-down">{{ key }}</i>
               </button>
-              <div v-for="(link, key) in entity.links" :key="key">
+              <div v-for="(value, key) in getLinksInfo(entity.links)" :key="key">
                 <div class="collapse" :id="`collapseLinks${key}`">
                   <ul class="list-group mt-2">
                     <li v-if="filterLinks(key)" class="list-group-item">
-                      <p>{{ key }}</p>
+                      <p @click="goToEntity(key, value)">{{ value }}</p>
                     </li>
                   </ul>
                 </div>
@@ -38,8 +37,8 @@
             </li>
           </ul>
 
-          <div v-if="type == 'Article'">
-            <p class="h4 text-danger">{{ formattedPrice }}</p>
+          <div v-if="type == 'articles'">
+            <p class="h4 text-secondary">{{ formattedPrice }}</p>
             <button class="btn btn-primary mt-3" @click="addToCart">Add to cart</button>
           </div>
         </div>
@@ -59,7 +58,7 @@ export default {
       type: null,
       entityID: null,
       entity: null,
-      isEditing: false, // Pour suivre si nous sommes en mode édition
+      isEditing: false,
     };
   },
   methods: {
@@ -69,6 +68,14 @@ export default {
     getEntityID() {
       return this.$route.params.entityID;
     },
+    getLinksInfo(links) {
+      const returnObject = {}
+      for (const [key, value] of Object.entries(links)) {
+        const hrefSplit = value.href.split("/")
+        returnObject[key] = hrefSplit[hrefSplit.length - 2]
+      }
+      return returnObject
+    },
     async getEntry() {
       try {
         const headers = {
@@ -77,12 +84,11 @@ export default {
           'Access-Control-Allow-Origin': '*'
         };
         const req = await axios.get(`${apiUrl}/${this.type}/${this.entityID}`, { headers: headers });
-        this.entity = req.data;
+        this.entity = await req.data;
         this.entity.links = this.entity._links;
         delete this.entity._links;
         delete this.entity.links.self;
         delete this.entity.links[this.type.slice(0, -1)];
-        console.log(this.entity);
       } catch (error) {
         if (error.response && (error.response.status === 404 || error.response.status === 403)) {
           this.$router.push("/");
@@ -90,12 +96,15 @@ export default {
       }
     },
     filterLinks(key) {
-      console.log(key);
       return !(key == "self" || key == this.type.slice(0, -1));
     },
     hasOtherKeys() {
       const keys = Object.keys(this.entity.links);
       return keys.some(key => key != "self" && key != this.type.slice(0, -1));
+    },
+    async goToEntity(entity, id) {
+      await this.$router.push(`/${entity}${entity.slice(-1) != "s" ? "s" : ""}/details/${id}`);
+      console.log("GO TO ENTITY FUNC " + entity);
     },
     async saveChanges() {
       try {
@@ -106,17 +115,20 @@ export default {
         };
         await axios.put(`${apiUrl}/${this.type}/${this.entityID}`, this.entity, { headers: headers });
         this.isEditing = false;
-        console.log('Changes saved successfully');
       } catch (error) {
         console.error('Error saving changes:', error);
       }
     },
     addToCart() {
-      // Logique pour ajouter le produit au panier
       console.log(`${this.entity.title || 'Entité'} ajouté au panier`);
     },
     formatKey(key) {
       return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+    },
+    async reloadEntity() {
+      this.type = this.getType();
+      this.entityID = this.getEntityID();
+      await this.getEntry();
     }
   },
   computed: {
@@ -131,10 +143,15 @@ export default {
     }
   },
   async mounted() {
+    console.log("mounted");
     if (Cookies.get("token") === undefined) this.$router.push("/login");
-    this.type = this.getType();
-    this.entityID = this.getEntityID();
-    await this.getEntry();
+    await this.reloadEntity();
+  },
+  watch: {
+    '$route'() {
+      console.log("Route changed");
+      this.reloadEntity();
+    }
   }
 };
 </script>

@@ -56,17 +56,12 @@ export default {
         if (response.status === 200) {
           const token = response.data.token;
           const expiresIn = response.data.expiresIn;
-          const expirationDate = new Date(new Date().getTime() + expiresIn * 1000); // expiresIn en secondes
-
-          // Stocker le token dans les cookies avec une date d'expiration
+          const expirationDate = new Date(new Date().getTime() + expiresIn);
           Cookies.set('token', token, { expires: expirationDate, secure: true, sameSite: 'Strict' });
+          localStorage.setItem("userEmail", this.email)
+          this.errorMessage = null;
 
-          this.errorMessage = null; // Réinitialiser le message d'erreur
-
-          // Émettre un événement de succès de connexion pour déclencher le rafraîchissement du header
           this.$emit('login-success');
-
-          // Rediriger l'utilisateur vers la page d'accueil
           this.$router.push('/');
         } else {
           this.errorMessage = "Erreur inattendue, veuillez réessayer.";
