@@ -68,12 +68,11 @@ export default {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
-        const req = await axios.get(`${apiUrl}/api/dtos/${this.type}`, {
+        const req = await axios.get(`${apiUrl}/api/dto/${this.type}`, {
           headers: headers
         });
         const res = req.data;
-        console.log(res)
-        this.structure = req.data
+        this.structure = res.fields
           .filter((field) => field.name !== "id")
           .map((field) => ({ ...field, value: "" }));
 

@@ -4,8 +4,10 @@ import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
 import ListConsultView from "@/views/ListConsultView.vue";
 import DetailsView from "@/views/DetailsView.vue";
+import OrderView from "@/views/OrderView.vue";
 
 import CreateComponent from "@/components/CreateComponent.vue";
+import ProfileView from "@/views/ProfileView.vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -38,6 +40,16 @@ const router = createRouter({
       path: "/:type/details/:entityID",
       name: "details",
       component: DetailsView,
+    },
+    {
+      path : "/profile",
+      name : "profile",
+      component: ProfileView,
+    },
+    {
+      path : "/order",
+      name : "order",
+      component : OrderView,
     }
   ],
 });
