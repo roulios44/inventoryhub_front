@@ -20,21 +20,25 @@
               </li>
             </div>
             <li v-if="entity.links && hasOtherKeys(entity.links)" class="list-group-item">
-              <button v-for="(link, key) in entity.links" :key="key" class="btn btn-link" type="button"
-                data-bs-toggle="collapse" :data-bs-target="`#collapseLinks${key}`" aria-expanded="false"
-                aria-controls="collapseLinks">
-                <i class="bi bi-chevron-down">{{ key }}</i>
-              </button>
-              <div v-for="(value, key) in getLinksInfo(entity.links)" :key="key">
-                <div class="collapse" :id="`collapseLinks${key}`">
+              <div v-for="(link, key) in entity.links" :key="key">
+                <button @click="toggleCollapse(key), getRelatedEntity(link, key)" class="btn btn-link" type="button"
+                  :aria-expanded="isCollapseOpen(key)" :data-bs-target="`#collapseLinks${key}`"
+                  aria-controls="collapseLinks">
+                  <i :class="isCollapseOpen(key) ? 'bi bi-chevron-up' : 'bi bi-chevron-down'">
+                    {{ key }}
+                  </i>
+                </button>
+                <div :id="`collapseLinks${key}`" :class="{ 'collapse': true, 'show': isCollapseOpen(key) }">
                   <ul class="list-group mt-2">
                     <li v-if="filterLinks(key)" class="list-group-item">
-                      <p @click="goToEntity(key, value)">{{ value }}</p>
+                      <p v-for="obj in relatedEntity[`${key}`]" @click="goToEntity(key, obj.id)">{{
+                        obj.id }}</p>
                     </li>
                   </ul>
                 </div>
               </div>
             </li>
+
           </ul>
 
           <div v-if="type == 'articles'">
@@ -52,6 +56,7 @@ import axios from "axios";
 import Cookies from 'js-cookie';
 const apiUrl = import.meta.env.VITE_API_URL;
 
+
 export default {
   data() {
     return {
@@ -59,6 +64,8 @@ export default {
       entityID: null,
       entity: null,
       isEditing: false,
+      openCollapses: {},
+      relatedEntity: {}
     };
   },
   methods: {
@@ -76,6 +83,16 @@ export default {
       }
       return returnObject
     },
+    toggleCollapse(key) {
+      if (this.openCollapses[key]) {
+        delete this.openCollapses[key];
+      } else {
+        this.openCollapses[key] = true;
+      }
+    },
+    isCollapseOpen(key) {
+      return this.openCollapses[key];
+    },
     async getEntry() {
       try {
         const headers = {
@@ -89,6 +106,7 @@ export default {
         delete this.entity._links;
         delete this.entity.links.self;
         delete this.entity.links[this.type.slice(0, -1)];
+        console.log(this.entity)
       } catch (error) {
         if (error.response && (error.response.status === 404 || error.response.status === 403)) {
           this.$router.push("/");
@@ -105,6 +123,25 @@ export default {
     async goToEntity(entity, id) {
       await this.$router.push(`/${entity}${entity.slice(-1) != "s" ? "s" : ""}/details/${id}`);
       console.log("GO TO ENTITY FUNC " + entity);
+    },
+    async getRelatedEntity(url, key) {
+      try {
+        const headers = {
+          "Authorization": "Bearer " + Cookies.get("token"),
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        };
+        const req = await axios.get(url.href, { headers: headers });
+        console.log(req.data._embedded)
+        if (req.data._embedded !== "undefined") this.relatedEntity[`${key}`] = [await req.data]
+        else {
+          this.relatedEntity[`${key}`] = await req.data._embedded
+        }
+      } catch (error) {
+        if (error.response && (error.response.status === 404 || error.response.status === 403)) {
+          this.$router.push("/");
+        }
+      }
     },
     async saveChanges() {
       try {
@@ -143,13 +180,11 @@ export default {
     }
   },
   async mounted() {
-    console.log("mounted");
     if (Cookies.get("token") === undefined) this.$router.push("/login");
     await this.reloadEntity();
   },
   watch: {
     '$route'() {
-      console.log("Route changed");
       this.reloadEntity();
     }
   }

@@ -4,6 +4,7 @@ import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
 import ListConsultView from "@/views/ListConsultView.vue";
 import DetailsView from "@/views/DetailsView.vue";
+import OrderView from "@/views/OrderView.vue";
 
 import CreateComponent from "@/components/CreateComponent.vue";
 import ProfileView from "@/views/ProfileView.vue";
@@ -44,6 +45,11 @@ const router = createRouter({
       path : "/profile",
       name : "profile",
       component: ProfileView,
+    },
+    {
+      path : "/order",
+      name : "order",
+      component : OrderView,
     }
   ],
 });

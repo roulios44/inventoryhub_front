@@ -1,4 +1,6 @@
 <template v-if="!isHiddenRoute()">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
   <div>
     <!-- Burger Menu Button -->
     <button class="btn btn-primary position-fixed top-0 start-0 m-2 d-flex align-items-center justify-content-center"

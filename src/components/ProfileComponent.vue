@@ -8,8 +8,8 @@
                 <div class="card-body">
                     <h1 class="card-title">{{ user.name }}</h1>
 
-                    <button v-if="!isEditing" class="btn btn-secondary mt-3" @click="isEditing = true">Modifier</button>
-                    <button v-if="isEditing" class="btn btn-primary mt-3" @click="saveChanges">Enregistrer</button>
+                    <!-- <button v-if="!isEditing" class="btn btn-secondary mt-3" @click="isEditing = true">Modifier</button>
+                    <button v-if="isEditing" class="btn btn-primary mt-3" @click="saveChanges">Enregistrer</button> -->
 
                     <ul class="list-group list-group-flush">
                         <div v-for="(value, key) in user" :key="key">
@@ -24,7 +24,8 @@
                         <!-- Pour chaque relation récupérée via _links -->
                         <li v-for="(relatedData, key) in relatedDataObjects" :key="key" class="list-group-item">
                             <strong>{{ formatKey(key) }}:</strong>
-                            <pre>{{ relatedData }}</pre> <!-- Utilisation de <pre> pour un affichage brut -->
+                            <p v-if="relatedData.title">{{ relatedData.title }}</p>
+                            <p v-if="relatedData.dscription">{{ relatedData.description }}</p>
                         </li>
                     </ul>
 
@@ -113,7 +114,7 @@ export default {
             return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         },
         isHiddenField(key) {
-            return key === 'password' || key === 'id' || key === '_links';
+            return key === 'password' || key === 'id' || key === '_links' || key == "authorities";
         },
         isReadonlyField(key) {
             return key === 'email';

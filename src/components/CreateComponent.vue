@@ -72,7 +72,6 @@ export default {
           headers: headers
         });
         const res = req.data;
-        console.log(res)
         this.structure = res.fields
           .filter((field) => field.name !== "id")
           .map((field) => ({ ...field, value: "" }));
