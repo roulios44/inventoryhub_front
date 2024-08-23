@@ -29,7 +29,7 @@
           <div v-for="entity in filteredEntities" :key="entity.id" @click="toDetails(entity.id)" class="mb-3">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">{{ entity.name }}</h5>
+                <h5 class="card-title">{{ entity.title ? entity.title : entity.name }}</h5>
                 <p class="card-text">
                   {{ entity.description }}
                 </p>

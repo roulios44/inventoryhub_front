@@ -125,7 +125,7 @@ export default {
       }
     },
     detectedNonNative(type) {
-      const nativeTypes = ["long", "string", "integer", "boolean", "double", "float", "character", "byte", "short"]
+      const nativeTypes = ["string", "integer", "boolean", "double", "float", "character", "byte", "short"]
       return (nativeTypes.includes(type.toLowerCase()));
     }
   },
@@ -168,7 +168,6 @@ export default {
 }
 
 .container {
-  background-color: #f5f5f5;
   padding: 2rem;
   border-radius: 8px;
 }

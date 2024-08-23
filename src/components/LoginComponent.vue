@@ -20,7 +20,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block mb-4" @click="login">
+          <button type="submit" class="btn btn-primary mb-4" @click="login">
             Sign in
           </button>
         </div>
@@ -57,11 +57,15 @@ export default {
           const token = response.data.token;
           const expiresIn = response.data.expiresIn;
           const expirationDate = new Date(new Date().getTime() + expiresIn);
+          console.log(response.data)
           Cookies.set('token', token, { expires: expirationDate, secure: true, sameSite: 'Strict' });
-          localStorage.setItem("userEmail", this.email)
+          Cookies.set('user', JSON.stringify({
+            "name": response.data.name,
+            "surname": response.data.surname,
+            "email": response.data.email
+          }), { expires: expirationDate, secure: true, sameSite: 'Strict' })
           this.errorMessage = null;
-
-          this.$emit('login-success');
+          // this.$emit('login-success');
           this.$router.push('/');
         } else {
           this.errorMessage = "Erreur inattendue, veuillez réessayer.";
@@ -81,5 +85,9 @@ export default {
 <style>
 .card {
   margin-top: 25px;
+}
+
+.btn-primary {
+  display: block;
 }
 </style>

@@ -1,7 +1,14 @@
-<script setup>
-import HeaderComponent from '@/components/HeaderComponent.vue';
-</script>
-
 <template>
-    <HeaderComponent />
+    <HomeComponent />
 </template>
+
+<script>
+import HomeComponent from '@/components/HomeComponent.vue';
+export default {
+    methods: {
+    },
+    components: {
+        HomeComponent,
+    }
+};
+</script>
