@@ -5,6 +5,7 @@ import RegisterView from "@/views/RegisterView.vue";
 import ListConsultView from "@/views/ListConsultView.vue";
 import DetailsView from "@/views/DetailsView.vue";
 import OrderView from "@/views/OrderView.vue";
+import OutStockView from "@/views/OutStockView.vue"
 
 import CreateComponent from "@/components/CreateComponent.vue";
 import ProfileView from "@/views/ProfileView.vue";
@@ -50,6 +51,11 @@ const router = createRouter({
       path : "/order",
       name : "order",
       component : OrderView,
+    },
+    {
+      path : "/outstock",
+      name : "outstock",
+      component : OutStockView
     }
   ],
 });

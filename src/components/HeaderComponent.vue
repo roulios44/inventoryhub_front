@@ -51,7 +51,7 @@ export default {
     const router = useRouter();
     const route = useRoute();
     const allowedEndpoints = ref([]);
-    const isSidebarVisible = ref(window.innerWidth >= 992);
+    const isSidebarVisible = ref(window.innerWidth >= 1750);
     const showHeader = ref(false);
     let offcanvasInstance = null;
 
@@ -88,7 +88,7 @@ export default {
     };
 
     const handleResize = () => {
-      isSidebarVisible.value = window.innerWidth >= 992;
+      isSidebarVisible.value = window.innerWidth >= 1750;
     };
 
     onMounted(async () => {
@@ -171,7 +171,7 @@ body {
   display: none;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 1750px) {
   .sidebar {
     display: none;
   }
@@ -181,7 +181,7 @@ body {
   }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1750px) {
   .btn.btn-primary {
     display: none;
   }
