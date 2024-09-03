@@ -76,6 +76,7 @@ export default {
         };
         const req = await axios.get(`${apiUrl}/${type.value}`, { headers });
         const res = req.data;
+        console.log(req.config.url)
         entities.value = res._embedded[type.value];
         filteredEntities.value = entities.value;
         serverResponse.value = true;
@@ -87,7 +88,9 @@ export default {
     };
 
     const redirectCreate = () => {
-      router.push(`/create/${type.value.slice(0, -1)}`)
+      const urlRedirect = type.value == "categories" ?'/create/category' :`/create/${type.value.slice(0, -1)}`
+      console.log(urlRedirect)
+      router.push(urlRedirect)
     }
 
     const searchEntity = async () => {

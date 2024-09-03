@@ -4,9 +4,9 @@
     <form @submit.prevent="createEntity">
       <div class="mb-3" v-for="field in structure" :key="field.name">
         <div>
-          <label :for="field.name" class="form-label text-secondary">{{
-            field.name
-          }}</label>
+          <label :for="field.name" class="form-label text-secondary" v-if="field.type != 'Long'">
+            {{ field.name }}
+          </label>
           <input
             v-if="detectedNonNative(field.type)"
             type="text"
@@ -18,15 +18,26 @@
           />
         </div>
       </div>
-      <div v-for="entity in relatedEntities" :key="entity.type">
-        <select class="form-control" v-model="selectedEntities[entity.type]" required>
-          <option v-for="key in entity" :key="key.id" :value="key.id">
+
+      <div v-for="(entity, index) in relatedEntities" :key="index">
+        <label :for="'select-' + entity.type" class="form-label text-secondary">
+          {{ capitalizeFirstLetter(entity.type) }}
+        </label>
+        <select
+          :id="'select-' + entity.type"
+          class="form-control"
+          v-model="selectedEntities[entity.type]"
+          required
+        >
+          <option v-for="key in entity.data" :key="key.id" :value="key.id">
             {{ key.title }}
           </option>
         </select>
       </div>
+
       <button type="submit" class="btn btn-success">Submit</button>
     </form>
+
     <div
       class="toast align-items-center text-white bg-success"
       role="alert"
@@ -44,6 +55,7 @@
         ></button>
       </div>
     </div>
+
     <div
       class="toast align-items-center text-white bg-danger"
       role="alert"
@@ -67,8 +79,8 @@
 <script>
 import axios from "axios";
 import Cookies from "js-cookie";
+
 const apiUrl = import.meta.env.VITE_API_URL;
-const apiStructUrl = import.meta.env.VITE_API_STRUCT_URL;
 
 export default {
   data() {
@@ -78,7 +90,7 @@ export default {
       showSuccess: false,
       showError: false,
       relatedEntities: [],
-      selectedEntities: {}, // Nouvelle propriété pour stocker les IDs sélectionnés
+      selectedEntities: {},
     };
   },
   methods: {
@@ -114,18 +126,13 @@ export default {
     },
     async createEntity() {
       console.log(this.structure);
-
-      // Filtrer les champs pour supprimer ceux de type "Long"
-      const filteredStructure = this.structure.filter((field) => field.type !== "Long");
-
+      const filteredStructure = this.structure.filter(
+        (field) => field.type !== "Long"
+      );
       const data = {};
-
-      // Construire l'objet data avec la structure filtrée
       filteredStructure.forEach((field) => {
         data[field.name] = field.value;
       });
-
-      // Ajouter les entités sélectionnées à l'objet data
       for (const [key, value] of Object.entries(this.selectedEntities)) {
         data[key + "Id"] = value;
       }
@@ -136,11 +143,15 @@ export default {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
         };
-
-        const url = apiUrl + (this.type === "user" ? "/auth/signup" : `/${this.type}s`);
-        console.log(data);
-
-        // Envoyer la requête POST avec les données filtrées
+        const url =
+          apiUrl +
+          (this.type === "user"
+            ? "/auth/signup"
+            : `/${
+                this.type.endsWith("y")
+                  ? this.type.slice(0, -1) + "ies"
+                  : this.type + "s"
+              }`);
         await axios.post(url, data, {
           headers: headers,
         });
@@ -160,11 +171,13 @@ export default {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
         };
-        const res = await axios.get(`${apiUrl}/${key}s/all`, {
+        const url = `${apiUrl}/${
+          key.endsWith("y") ? key.slice(0, -1) + "ies" : key + "s"
+        }/all`;
+        const res = await axios.get(url, {
           headers: headers,
         });
-        res.data.type = key;
-        this.relatedEntities.push(res.data);
+        this.relatedEntities.push({ type: key, data: res.data });
       } catch (error) {
         console.error("Erreur lors de la récupération des rôles :", error);
       }
@@ -187,25 +200,14 @@ export default {
     if (Cookies.get("token") === undefined) this.$router.push("/login");
     this.type = this.getType();
     await this.getObjectStruct();
-    await this.structure.map(async (field) => {
+    for (const field of this.structure) {
       if (field.type == "Long") {
         await this.getEntityRelation(field.name);
       }
-    });
-    await this.structure.filter((field) =>
-      [
-        "string",
-        "integer",
-        "boolean",
-        "double",
-        "float",
-        "character",
-        "byte",
-        "short",
-      ].includes(field.type.toLowerCase())
-    );
+    }
   },
 };
 </script>
 
-<style></style>
+<style>
+</style>

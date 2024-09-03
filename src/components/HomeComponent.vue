@@ -11,8 +11,8 @@
             <div class="col-md-4 mb-3">
                 <div class="card text-center">
                     <div class="card-body">
-                        <h5 class="card-title">Gérer les produits</h5>
-                        <p class="card-text">Ajoutez, modifiez ou supprimez des produits.</p>
+                        <h5 class="card-title">Manage products</h5>
+                        <p class="card-text">Add, edit or remove products.</p>
                         <a href="/articles" class="btn btn-primary">Gérer</a>
                     </div>
                 </div>
@@ -20,8 +20,8 @@
             <div class="col-md-4 mb-3">
                 <div class="card text-center">
                     <div class="card-body">
-                        <h5 class="card-title">Voir les statistiques</h5>
-                        <p class="card-text">Consultez les statistiques de votre inventaire.</p>
+                        <h5 class="card-title">View statistics</h5>
+                        <p class="card-text">View your inventory statistics.</p>
                         <a href="/outstock" class="btn btn-primary">Voir</a>
                     </div>
                 </div>
@@ -30,13 +30,14 @@
 
         <!-- Section des statistiques clés -->
         <div class="stats-section mb-5">
-            <h2>Statistiques Clés</h2>
+            <h2>Key Statistics</h2>
             <div class="row">
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-body text-center">
                             <h3>{{ this.totalArticles }}</h3>
-                            <p>Produits au total</p>
+                            <p>Total products
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -44,7 +45,7 @@
                     <div class="card">
                         <div class="card-body text-center">
                             <h3>{{ articlesOutOfStock.length + articlesNoStock.length }}</h3>
-                            <p>Produits en rupture de stock/Sans stocks</p>
+                            <p>Products out of stock/No stock</p>
                         </div>
                     </div>
                 </div>
@@ -109,12 +110,6 @@ export default {
         this.articlesNoStock = await res.articlesOutOfStock.filter((article) => article.warehouseId == null)
         this.totalArticles = res.totalArticles
         this.articlesNearNoStock = res.articleNearOut
-
-        console.log(this.articlesOutOfStock)
-        console.log(this.articlesNoStock)
-        console.log(this.totalArticles)
-        console.log(this.articlesNearNoStock)
-
       } catch (error) {
         console.error('Failed to fetch allowed endpoints', error);
       }

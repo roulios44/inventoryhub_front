@@ -1,14 +1,13 @@
 <template>
     <div class="container">
-        <!-- Section des statistiques clés -->
         <div class="stats-section mb-5">
-            <h2>Statistiques Clés</h2>
+            <h2>Key Statistics</h2>
             <div class="row">
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-body text-center">
                             <h3>{{ totalArticles }}</h3>
-                            <p>Produits au total</p>
+                            <p>Total articles</p>
                         </div>
                     </div>
                 </div>
@@ -16,7 +15,7 @@
                     <div class="card">
                         <div class="card-body text-center">
                             <h3>{{ articlesOutOfStock.length + articlesNoStock.length }}</h3>
-                            <p>Produits en rupture de stock/Sans stocks</p>
+                            <p>Products out of stock/No stock</p>
                         </div>
                     </div>
                 </div>
@@ -24,29 +23,26 @@
                     <div class="card">
                         <div class="card-body text-center">
                             <h3>{{ articlesNearNoStock.length }}</h3>
-                            <p>Produits bientôt en rupture</p>
+                            <p>Products soon to be sold out</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Section du filtre et de l'affichage des articles -->
         <div class="filter-section mb-4">
-            <label for="filter">Afficher les articles :</label>
+            <label for="filter">Article's stock state :</label>
             <select id="filter" v-model="selectedFilter" class="form-select">
-                <option value="outOfStock">En rupture de stock</option>
-                <option value="noStock">Sans stock</option>
-                <option value="nearNoStock">Bientôt en rupture</option>
+                <option value="outOfStock">Out of stock</option>
+                <option value="noStock">Without stock</option>
+                <option value="nearNoStock">Soon to be out of stock</option>
             </select>
         </div>
 
-        <!-- Liste des articles filtrés -->
         <div class="articles-section">
-            <h3>Liste des articles</h3>
-            <label v-if="selectedFilter != 'noStock'" for="warehouseFilter">Sélectionnez un entrepôt :</label>
-            <select id="warehouseFilter" v-model="selectedWarehouseId" v-if="selectedFilter != 'noStock'">
-                <option disabled value="">Choisissez un entrepôt</option>
+            <h3>Articles list</h3>
+            <label v-if="selectedFilter != 'noStock'" for="warehouseFilter">Select a warehouse :</label>
+            <select class="form-select" id="warehouseFilter" v-model="selectedWarehouseId" v-if="selectedFilter != 'noStock'">
+                <option disabled value=""></option>
                 <option 
                     v-for="warehouse in distinctWarehouses" 
                     :key="warehouse.warehouseId" 
@@ -56,18 +52,19 @@
             </select>
             <ul>
                 <li v-for="article in filteredArticles" :key="article.articleId">
-                    <p>{{ article.articleTitle }} - {{ article.stockQuantity }} en stock</p><br>
+                    <p>{{ article.articleTitle }} - {{ article.stockQuantity }} in stock</p><br>
                     <span v-if="selectedFilter !== 'noStock'">
                         In <strong>{{ article.warehouseTitle }}</strong> warehouse
                     </span>
                     <span v-else>
-                        Cet article n'a jamais eu de stock dans un entrepôt
+                        This article has never been in stock in a warehouse
                     </span>
                 </li>
             </ul>
         </div>
     </div>
 </template>
+
 <script>
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -97,7 +94,7 @@ export default {
     computed: {
         filteredArticles() {
             let articles = [];
-            this.selectedWarehouseId = null
+
             if (this.selectedFilter === 'outOfStock') {
                 articles = this.articlesOutOfStock;
             } else if (this.selectedFilter === 'noStock') {
@@ -105,8 +102,6 @@ export default {
             } else if (this.selectedFilter === 'nearNoStock') {
                 articles = this.articlesNearNoStock;
             }
-
-            // Filtrage supplémentaire en fonction de l'entrepôt sélectionné
             if (this.selectedWarehouseId) {
                 articles = articles.filter(article => article.warehouseId === this.selectedWarehouseId);
             }
@@ -129,14 +124,12 @@ export default {
                 this.totalArticles = res.totalArticles;
                 this.articlesNearNoStock = res.articleNearOut;
                 
-                // Mettre à jour les entrepôts distincts après avoir reçu les données
                 this.updateDistinctWarehouses();
             } catch (error) {
                 console.error('Failed to fetch allowed endpoints', error);
             }
         },
         updateDistinctWarehouses() {
-            // Utiliser tous les articles pour déterminer les entrepôts disponibles
             const allArticles = [
                 ...this.articlesOutOfStock,
                 ...this.articlesNoStock,
