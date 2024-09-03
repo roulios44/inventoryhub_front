@@ -76,6 +76,18 @@
                 </div>
             </div>
 
+            <!--Customer Select-->
+            <div class="row" v-if="orderType == 'client'">
+                <div class="col-md-4">
+                    <label for="customer" class="form-label">Customer :</label>
+                    <select id="customer" v-model="orderCustomer" class="form-select">
+                        <option :value="null">Select a customer</option>
+                        <option v-for="customer in customers" :key="customer.id" :value="customer.id">{{ customer.title }}</option>
+                    </select>
+                    {{ orderCustomer }}
+                </div>
+            </div>
+
             <!-- Bouton de soumission -->
             <div class="row">
                 <div class="col-md-12 text-end">
@@ -96,7 +108,7 @@ export default {
         return {
             articles: [],
             warehouses: [],
-            stockData: [], // Stock pré-chargé pour chaque combinaison entrepôt/article
+            stockData: [],
             orderItems: [{
                 article: null,
                 warehouse: null,
@@ -105,8 +117,10 @@ export default {
                 unitPrice: 0,
                 linePrice: 0
             }],
-            orderType: 'client', // Par défaut, la commande est pour un client
-            selectedWarehouse: null // Entrepôt de destination pour commande fournisseur
+            orderType: 'client', 
+            selectedWarehouse: null, 
+            orderCustomer : null,
+            customers : [],
         };
     },
     computed: {
@@ -179,6 +193,19 @@ export default {
                 console.error("Erreur lors de la récupération des stocks :", error);
             }
         },
+        async getCustomer(){
+            try{
+                const headers = {
+                    "Authorization": "Bearer " + Cookies.get("token"),
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                };
+                const req = await axios.get(`${apiUrl}/customers/all`,{headers : headers})
+                this.customers = await req.data
+            }catch(error){
+                console.error("error while getting customers", error)
+            }
+        },
         addOrderItem() {
             this.orderItems.push({
                 article: null,
@@ -233,26 +260,44 @@ export default {
             return this.orderType === 'client' ? `${article.price}€ (Client)` : `${article.supplierPrice}€ (Fournisseur)`;
         },
         submitOrder() {
-            if (this.orderType === 'supplier' && !this.selectedWarehouse) {
-                alert('Please select a destination warehouse.');
-                return;
-            }
+            try{
 
-            if (this.orderType === 'client') {
-                for (const item of this.orderItems) {
-                    if (!item.warehouse) {
-                        alert('Please select a warehouse for each article.');
-                        return;
-                    }
+                const order = {
+                    "orderNumber": "12345",
+                    "totalPrice": 250.75,
+                    "delivery_adress": "123 Main St",
+                    "delivery_postcode": "75000",
+                    "delivery_country": "France",
+                    "customerId": 1,
+                    "stateId": 1,
+                    "typeId": 1,
+                    "userId": 1,
+                    "articles": [
+                        {
+                            "articleId": 1,
+                            "quantity": 2
+                        }
+                    ]
+                }
+
+
+
+            } catch (error) {
+                console.error("Erreur lors de la récupération des articles :", error);
+                if (error.response && error.response.status === 404) {
+                    this.$router.push("/");
                 }
             }
-
-            alert(`Order submitted with a total of ${this.total.toFixed(2)}€.`);
-            // Logique pour soumettre la commande (par exemple, envoyer à une API)
+            const headers = {
+                    "Authorization": "Bearer " + Cookies.get("token"),
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                };
         }
     },
     async mounted() {
         if (Cookies.get("token") === undefined) this.$router.push("/login");
+        await this.getCustomer()
         await this.getArticles();
         await this.getWarehouses();
     }
