@@ -62,7 +62,8 @@ export default {
           Cookies.set('user', JSON.stringify({
             "name": response.data.name,
             "surname": response.data.surname,
-            "email": response.data.email
+            "email": response.data.email,
+            "id" : response.data.id,
           }), { expires: expirationDate, secure: true, sameSite: 'Strict' })
           this.errorMessage = null;
           // this.$emit('login-success');

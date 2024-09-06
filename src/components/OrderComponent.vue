@@ -35,7 +35,7 @@
                 </div>
 
                 <div class="col-md-2">
-                    <input type="number" :max="orderItem.maxQuantity" min="1" v-model.number="orderItem.quantity" @input="updatePrice(index)"
+                    <input type="number" :max="orderItem.maxQuantity ? orderItem.maxQuantity : 0" :min="orderItem.maxQuantity ? 1 : 0" v-model.number="orderItem.quantity" @input="updatePrice(index)"
                         class="form-control" placeholder="Quantity">
                 </div>
                 <div class="col-md-2">
@@ -75,16 +75,16 @@
                     <h3>Total: {{ total.toFixed(2) }}€</h3>
                 </div>
             </div>
+            {{ orderItems }}
 
             <!--Customer Select-->
             <div class="row" v-if="orderType == 'client'">
                 <div class="col-md-4">
                     <label for="customer" class="form-label">Customer :</label>
-                    <select id="customer" v-model="orderCustomer" class="form-select">
+                    <select id="customer" v-model="orderCustomer" class="form-select" required>
                         <option :value="null">Select a customer</option>
                         <option v-for="customer in customers" :key="customer.id" :value="customer.id">{{ customer.title }}</option>
                     </select>
-                    {{ orderCustomer }}
                 </div>
             </div>
 
@@ -193,7 +193,7 @@ export default {
                 console.error("Erreur lors de la récupération des stocks :", error);
             }
         },
-        async getCustomer(){
+        async getCustomers(){
             try{
                 const headers = {
                     "Authorization": "Bearer " + Cookies.get("token"),
@@ -202,6 +202,7 @@ export default {
                 };
                 const req = await axios.get(`${apiUrl}/customers/all`,{headers : headers})
                 this.customers = await req.data
+                console.log(this.customers)
             }catch(error){
                 console.error("error while getting customers", error)
             }
@@ -260,25 +261,31 @@ export default {
             return this.orderType === 'client' ? `${article.price}€ (Client)` : `${article.supplierPrice}€ (Fournisseur)`;
         },
         submitOrder() {
+            if (this.orderType === 'client' && !this.orderCustomer) {
+            alert("Please select a customer before placing the order.");
+            return; // Empêche la soumission du formulaire
+        }
             try{
-
+                const customer = this.customers.filter((customer) => customer.id == this.orderCustomer)[0]
                 const order = {
                     "orderNumber": "12345",
-                    "totalPrice": 250.75,
-                    "delivery_adress": "123 Main St",
-                    "delivery_postcode": "75000",
-                    "delivery_country": "France",
-                    "customerId": 1,
+                    "totalPrice": this.total,
+                    "delivery_adress": customer.adresse,
+                    "delivery_postcode": customer.codePostal,
+                    "delivery_country": customer.pays,
+                    "customerId": this.orderCustomer,
                     "stateId": 1,
                     "typeId": 1,
-                    "userId": 1,
-                    "articles": [
-                        {
-                            "articleId": 1,
-                            "quantity": 2
+                    "userId": JSON.parse(Cookies.get("user")).id,
+                    "articles": this.orderItems.map((article)=> {
+                        return {
+                            "articleId" : article.article.id,
+                            "quantity" : article.quantity,
+                            "warehouseId" : article.warehouse.id
                         }
-                    ]
+                    })
                 }
+                console.log(order)
 
 
 
@@ -293,11 +300,38 @@ export default {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 };
+        },
+        generateCustomerOrderData(){
+            return {
+                idCustomer: this.customers.filter((customer) => customer.id == this.orderCustomer)[0],        
+                userId: JSON.parse(Cookies.get("user")).id,            
+                typeId: 1,            
+                articles: this.orderItems.map((article)=> {
+                        return {
+                            "articleId" : article.article.id,
+                            "quantity" : article.quantity,
+                            "warehouseId" : article.warehouse.id
+                        }
+                    })
+            };
+        },
+        generateSupplierOrderData(){
+            const supplierOrderData = {
+                userId: JSON.parse(Cookies.get("user")).id,           
+                warehouseId: 3,        
+                typeId: 1,            
+                articles: this.orderItems.map((article)=> {
+                    return {
+                        "articleId" : article.article.id,
+                        "quantity" : article.quantity,
+                    }
+                })
+            };
         }
     },
     async mounted() {
         if (Cookies.get("token") === undefined) this.$router.push("/login");
-        await this.getCustomer()
+        await this.getCustomers()
         await this.getArticles();
         await this.getWarehouses();
     }
