@@ -48,8 +48,8 @@ const router = createRouter({
       component: ProfileView,
     },
     {
-      path : "/order",
-      name : "order",
+      path : "/create/order",
+      name : "createOrder",
       component : OrderView,
     },
     {

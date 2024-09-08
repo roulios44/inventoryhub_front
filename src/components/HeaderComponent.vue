@@ -28,9 +28,6 @@
               <a class="nav-link" @click="redirectToService(service.toLowerCase())">{{ service }}</a>
             </li>
           </div>
-          <li>
-            <a class="nav-link" @click="redirectToService('order')">Order</a>
-          </li>
           <li class="nav-item">
             <a class="nav-link" @click="redirectToService('profile')">Profile</a>
           </li>
@@ -91,7 +88,7 @@ export default {
     };
 
     const tabToExclude = (title) => {
-      return title !== "orders";
+      return title !== "";
     };
 
     const handleResize = () => {
@@ -210,5 +207,10 @@ body {
 }
 a{
   cursor: pointer;
+}
+
+.btn-primary{
+  background-color: #244E88;
+  border-color: #244E88;
 }
 </style>

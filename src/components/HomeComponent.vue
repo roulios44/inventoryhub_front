@@ -70,6 +70,7 @@
                 Nouveau : Consultez les nouvelles fonctionnalités dans les paramètres.
             </div>
         </div> -->
+        <FooterComponent />
     </div>
 </template>
 
@@ -78,6 +79,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import FooterComponent from './FooterComponent.vue';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -106,6 +108,7 @@ export default {
       try {
         const req = await axios.get(apiUrl + '/articles/homePage', { headers });
         const res = await req.data
+        console.log(await req.status)
         this.articlesOutOfStock = res.articlesOutOfStock.filter((article) => article.warehouseId != null && article.stockQuantity == 0)
         this.articlesNoStock = await res.articlesOutOfStock.filter((article) => article.warehouseId == null)
         this.totalArticles = res.totalArticles
@@ -114,6 +117,9 @@ export default {
         console.error('Failed to fetch allowed endpoints', error);
       }
         }
+    },
+    components : {
+        FooterComponent,
     },
     async mounted() {
         if (Cookies.get("token") === undefined) this.$router.push("/login");

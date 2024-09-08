@@ -9,11 +9,22 @@
             class="form-control w-75"
             v-model="searchQuery"
             @input="searchEntity"
-            placeholder="Search suppliers"
-            aria-label="Search suppliers"
+            :placeholder="'Search ' + type"
+            :aria-label="'Search ' + type"
           />
-          <button class="btn btn-primary rounded-circle ms-2" type="button" @click="redirectCreate">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+          <button
+            class="btn btn-primary rounded-circle ms-2"
+            type="button"
+            @click="redirectCreate"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="currentColor"
+              class="bi bi-plus"
+              viewBox="0 0 16 16"
+            >
               <path
                 d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"
               />
@@ -35,7 +46,7 @@
         </ul>
 
         <div v-if="filteredEntities.length === 0" class="text-center mt-4">
-          <p>No suppliers found</p>
+          <p>No {{ type }} found</p>
         </div>
       </div>
     </main>
@@ -52,7 +63,7 @@ import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Cookies from "js-cookie";
-
+import FooterComponent from "./FooterComponent.vue";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export default {
@@ -76,7 +87,10 @@ export default {
         entities.value = res._embedded[type.value];
         filteredEntities.value = entities.value;
       } catch (error) {
-        if (error.response && (error.response.status === 404 || error.response.status === 403)) {
+        if (
+          error.response &&
+          (error.response.status === 404 || error.response.status === 403)
+        ) {
           router.push("/");
         }
       }
@@ -94,7 +108,10 @@ export default {
     };
 
     const redirectCreate = () => {
-      const urlRedirect = type.value == "categories" ? "/create/category" : `/create/${type.value.slice(0, -1)}`;
+      const urlRedirect =
+        type.value == "categories"
+          ? "/create/category"
+          : `/create/${type.value.slice(0, -1)}`;
       router.push(urlRedirect);
     };
 
@@ -131,7 +148,7 @@ export default {
 
 <style scoped>
 .container-fluid {
-  background-color: #F5F5F5;
+  background-color: #f5f5f5;
   color: #333333;
 }
 
@@ -143,14 +160,9 @@ export default {
   background-color: #f8f9fa;
 }
 
-/* Footer fixe en bas de la page */
-footer.footer {
-  background-color: #244E88 !important;
-}
-
 .btn-primary {
-  background-color: #244E88;
-  border-color: #244E88;
+  background-color: #244e88;
+  border-color: #244e88;
 }
 
 .fixed-bottom {

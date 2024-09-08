@@ -12,7 +12,7 @@
             </label>
             <input
               v-if="detectedNonNative(field.type)"
-              type="text"
+              :type="field.name === 'password' ? 'password' : 'text'"
               :id="field.name"
               class="form-control"
               v-model="field.value"
@@ -85,12 +85,14 @@
         ></button>
       </div>
     </div>
+    <FooterComponent />
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import Cookies from "js-cookie";
+import FooterComponent from "./FooterComponent.vue";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -104,6 +106,9 @@ export default {
       relatedEntities: [],
       selectedEntities: {},
     };
+  },
+  components : {
+    FooterComponent
   },
   methods: {
     getType() {
@@ -146,8 +151,11 @@ export default {
         data[field.name] = field.value;
       });
       for (const [key, value] of Object.entries(this.selectedEntities)) {
-        data[key + "Id"] = value;
+        console.log(key)
+        console.log(value)
+        data[key] = value 
       }
+      console.log(data)
 
       try {
         const headers = {
@@ -158,7 +166,7 @@ export default {
         const url =
           apiUrl +
           (this.type === "user"
-            ? "/auth/signup"
+            ? "/auth/register"
             : `/${
                 this.type.endsWith("y")
                   ? this.type.slice(0, -1) + "ies"

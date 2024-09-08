@@ -43,12 +43,14 @@
         </div>
       </div>
     </div>
+    <FooterComponent />
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import Cookies from 'js-cookie';
+import FooterComponent from "./FooterComponent.vue";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 
@@ -163,6 +165,9 @@ export default {
       this.entityID = this.getEntityID();
       await this.getEntry();
     }
+  },
+  components : {
+    FooterComponent,
   },
   computed: {
     formattedPrice() {
