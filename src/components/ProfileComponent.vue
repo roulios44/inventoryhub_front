@@ -51,7 +51,7 @@ export default {
             user: null,
             isEditing: false,
             errorMessage: null,
-            relatedDataObjects: {}, // Stocke les données récupérées des relations
+            relatedDataObjects: {},
         };
     },
     methods: {
@@ -63,10 +63,10 @@ export default {
                     'Access-Control-Allow-Origin': '*'
                 };
                 const userEmail = localStorage.getItem("userEmail");
-                const req = await axios.get(`${apiUrl}/users/search/findByEmail?email=${userEmail}`, { headers });
+                const connectedUser = JSON.parse(Cookies.get("user"))
+                const req = await axios.get(`${apiUrl}/users/search/findByEmail?email=${connectedUser.email}`, { headers });
                 this.user = req.data;
 
-                // Après avoir récupéré le profil utilisateur, charge les données des relations
                 this.fetchRelatedData(this.user._links);
 
             } catch (error) {

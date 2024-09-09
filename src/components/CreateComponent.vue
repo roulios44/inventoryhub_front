@@ -1,48 +1,100 @@
 <template>
   <div class="container mt-5">
-    <h1 class="mb-4 text-primary">{{ capitalizeFirstLetter(type) }}</h1>
-    <form @submit.prevent="createEntity">
-      <div class="mb-3" v-for="field in structure" :key="field.name">
-        <div>
-          <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label>
-          <input v-if="field.type != 'Role'" type="text" :id="field.name" class="form-control" v-model="field.value"
-            :placeholder="field.name" :required="field.type != 'image'" />
+    <!-- Utilisation d'une card pour encadrer le formulaire -->
+    <div class="card shadow-sm p-4 mb-5 bg-white rounded">
+      <h1 class="card-title mb-4 text-primary">{{ capitalizeFirstLetter(type) }}</h1>
+      <form @submit.prevent="createEntity">
+        <div class="row">
+          <!-- Champs du formulaire organisés en grille -->
+          <div class="col-md-6 mb-3" v-for="field in structure" :key="field.name">
+            <label :for="field.name" class="form-label text-secondary" v-if="field.type != 'Long'">
+              {{ field.name }}
+            </label>
+            <input
+              v-if="detectedNonNative(field.type)"
+              :type="field.name === 'password' ? 'password' : 'text'"
+              :id="field.name"
+              class="form-control"
+              v-model="field.value"
+              :placeholder="field.name"
+              :required="field.type != 'image'"
+            />
+          </div>
         </div>
-      </div>
-      <div v-for="entity in relatedEntities">
-        <!-- <label :for="field.name" class="form-label text-secondary">{{ field.name }}</label> -->
-        <select class="form-control" required>
-          <option v-for="key in entity">{{ key }}</option>
-        </select>
-      </div>
-      <button type="submit" class="btn btn-custom">Submit</button>
-    </form>
-    <div class="toast align-items-center text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true"
-      v-if="showSuccess">
+
+        <!-- Sélection des entités liées -->
+        <div class="row">
+          <div class="col-md-6 mb-3" v-for="(entity, index) in relatedEntities" :key="index">
+            <label :for="'select-' + entity.type" class="form-label text-secondary">
+              {{ capitalizeFirstLetter(entity.type) }}
+            </label>
+            <select
+              :id="'select-' + entity.type"
+              class="form-select"
+              v-model="selectedEntities[entity.type]"
+              required
+            >
+              <option v-for="key in entity.data" :key="key.id" :value="key.id">
+                {{ key.title }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Bouton Submit stylisé avec effet de survol -->
+        <button type="submit" class="btn btn-success btn-lg w-100">Submit</button>
+      </form>
+    </div>
+
+    <!-- Toast de succès -->
+    <div
+      class="toast align-items-center text-white bg-success position-fixed bottom-0 end-0 m-3"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      v-if="showSuccess"
+      style="z-index: 1050"
+    >
       <div class="d-flex">
-        <div class="toast-body">
-          L'enregistrement a réussi !
-        </div>
-        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        <div class="toast-body">L'enregistrement a réussi !</div>
+        <button
+          type="button"
+          class="btn-close me-2 m-auto"
+          data-bs-dismiss="toast"
+          aria-label="Close"
+        ></button>
       </div>
     </div>
-    <div class="toast align-items-center text-white bg-danger" role="alert" aria-live="assertive" aria-atomic="true"
-      v-if="showError">
+
+    <!-- Toast d'erreur -->
+    <div
+      class="toast align-items-center text-white bg-danger position-fixed bottom-0 end-0 m-3"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      v-if="showError"
+      style="z-index: 1050"
+    >
       <div class="d-flex">
-        <div class="toast-body">
-          Échec de l'enregistrement.
-        </div>
-        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        <div class="toast-body">Échec de l'enregistrement.</div>
+        <button
+          type="button"
+          class="btn-close me-2 m-auto"
+          data-bs-dismiss="toast"
+          aria-label="Close"
+        ></button>
       </div>
     </div>
+    <FooterComponent />
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import Cookies from "js-cookie";
+import FooterComponent from "./FooterComponent.vue";
+
 const apiUrl = import.meta.env.VITE_API_URL;
-const apiStructUrl = import.meta.env.VITE_API_STRUCT_URL;
 
 export default {
   data() {
@@ -51,8 +103,12 @@ export default {
       structure: null,
       showSuccess: false,
       showError: false,
-      relatedEntities: []
+      relatedEntities: [],
+      selectedEntities: {},
     };
+  },
+  components : {
+    FooterComponent
   },
   methods: {
     getType() {
@@ -64,39 +120,62 @@ export default {
     async getObjectStruct() {
       try {
         const headers = {
-          "Authorization": "Bearer " + Cookies.get("token"),
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+          Authorization: "Bearer " + Cookies.get("token"),
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        };
         const req = await axios.get(`${apiUrl}/api/dto/${this.type}`, {
-          headers: headers
+          headers: headers,
         });
         const res = req.data;
         this.structure = res.fields
           .filter((field) => field.name !== "id")
           .map((field) => ({ ...field, value: "" }));
-
       } catch (error) {
-        console.error("Erreur lors de la récupération de la structure de l'objet :", error);
+        console.error(
+          "Erreur lors de la récupération de la structure de l'objet :",
+          error
+        );
         if (error.response && error.response.status === 404) {
           this.$router.push("/");
         }
       }
     },
     async createEntity() {
+      console.log(this.structure);
+      const filteredStructure = this.structure.filter(
+        (field) => field.type !== "Long"
+      );
       const data = {};
-      this.structure.forEach((field) => (data[field.name] = field.value));
+      filteredStructure.forEach((field) => {
+        data[field.name] = field.value;
+      });
+      for (const [key, value] of Object.entries(this.selectedEntities)) {
+        console.log(key)
+        console.log(value)
+        data[key] = value 
+      }
+      console.log(data)
+
       try {
         const headers = {
-          "Authorization": "Bearer " + Cookies.get("token"),
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-        const url = apiUrl + (this.type == 'user' ? "/auth/signup" : `/${this.type}s`)
-        console.log(data)
+          Authorization: "Bearer " + Cookies.get("token"),
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        };
+        const url =
+          apiUrl +
+          (this.type === "user"
+            ? "/auth/register"
+            : `/${
+                this.type.endsWith("y")
+                  ? this.type.slice(0, -1) + "ies"
+                  : this.type + "s"
+              }`);
         await axios.post(url, data, {
-          headers: headers
+          headers: headers,
         });
+
         this.showSuccess = true;
         this.showError = false;
       } catch (error) {
@@ -106,89 +185,55 @@ export default {
       }
     },
     async getEntityRelation(key) {
-      //TODO Faire un tri des nom de clé qui ne serrait pas a display ( sur les relations 1 to many généralement a voir sur le diagramme de MERISE)
       try {
         const headers = {
-          "Authorization": "Bearer " + Cookies.get("token"),
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-        const res = await axios.get(`${apiUrl}/${key}s/all`, {
-          headers: headers
+          Authorization: "Bearer " + Cookies.get("token"),
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        };
+        const url = `${apiUrl}/${
+          key.endsWith("y") ? key.slice(0, -1) + "ies" : key + "s"
+        }/all`;
+        const res = await axios.get(url, {
+          headers: headers,
         });
-        res.data.type = key
-        console.log(res.data)
-        this.relatedEntities.push(res.data)
-        console.log(key)
+        this.relatedEntities.push({ type: key, data: res.data });
       } catch (error) {
         console.error("Erreur lors de la récupération des rôles :", error);
       }
     },
     detectedNonNative(type) {
-      const nativeTypes = ["string", "integer", "boolean", "double", "float", "character", "byte", "short"]
-      return (nativeTypes.includes(type.toLowerCase()));
-    }
+      const nativeTypes = [
+        "string",
+        "integer",
+        "boolean",
+        "double",
+        "float",
+        "character",
+        "byte",
+        "short",
+      ];
+      return nativeTypes.includes(type.toLowerCase());
+    },
   },
   async mounted() {
-    if (Cookies.get("token") === undefined) this.$router.push("/login")
+    if (Cookies.get("token") === undefined) this.$router.push("/login");
     this.type = this.getType();
     await this.getObjectStruct();
-    await this.structure.map(async (field) => { if (field.type == "Long") await this.getEntityRelation(field.name) })
+    for (const field of this.structure) {
+      if (field.type == "Long") {
+        await this.getEntityRelation(field.name);
+      }
+    }
   },
 };
 </script>
 
 <style>
-.text-primary {
-  color: #244e88;
-}
-
-.text-secondary {
-  color: #4d97d2;
-}
-
-.btn-custom {
-  background-color: #007b46;
-  color: white;
-  border: none;
-}
-
-.btn-custom:hover {
-  background-color: #005b34;
-  color: white;
-}
-
-.form-control {
-  border-color: #cccccc;
-}
-
-.form-control:focus {
-  border-color: #4d97d2;
-  box-shadow: 0 0 0 0.2rem rgba(77, 151, 210, 0.25);
-}
-
-.container {
-  padding: 2rem;
-  border-radius: 8px;
-}
-
-h1 {
-  color: #244e88;
-}
-
-.secondary-color {
-  color: #333333;
-}
-
-.secondary-bg {
-  background-color: #ffa500;
-}
-
+/* Ajout de marges et d'espacements pour le design */
 .toast {
-  position: absolute;
-  top: 1rem;
+  position: fixed;
+  bottom: 1rem;
   right: 1rem;
-  width: 300px;
-  z-index: 1100;
 }
 </style>

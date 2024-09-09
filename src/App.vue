@@ -22,11 +22,11 @@ import HeaderComponent from './components/HeaderComponent.vue';
 }
 
 * {
-  font-family: 'Tahoma', sans-serif;
+  font-family: 'Roboto', sans-serif;
 }
 
 body {
-  background-color: #F5F5F5 !important;
+  background: linear-gradient(90deg, #b3e5fc, #e1f5fe) !;
   color: #333333;
 }
 

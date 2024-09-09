@@ -40,20 +40,17 @@
             </li>
 
           </ul>
-
-          <div v-if="type == 'articles'">
-            <p class="h4 text-secondary">{{ formattedPrice }}</p>
-            <button class="btn btn-primary mt-3" @click="addToCart">Add to cart</button>
-          </div>
         </div>
       </div>
     </div>
+    <FooterComponent />
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import Cookies from 'js-cookie';
+import FooterComponent from "./FooterComponent.vue";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 
@@ -106,7 +103,6 @@ export default {
         delete this.entity._links;
         delete this.entity.links.self;
         delete this.entity.links[this.type.slice(0, -1)];
-        console.log(this.entity)
       } catch (error) {
         if (error.response && (error.response.status === 404 || error.response.status === 403)) {
           this.$router.push("/");
@@ -114,14 +110,15 @@ export default {
       }
     },
     filterLinks(key) {
-      return !(key == "self" || key == this.type.slice(0, -1));
+      return !(key == "self" || key == this.type.slice(0, -1))
     },
     hasOtherKeys() {
-      const keys = Object.keys(this.entity.links);
-      return keys.some(key => key != "self" && key != this.type.slice(0, -1));
+      const keys = Object.keys(this.entity.links)
+      return keys.some(key => key != "self" && key != this.type.slice(0, -1))
     },
     async goToEntity(entity, id) {
-      await this.$router.push(`/${entity}${entity.slice(-1) != "s" ? "s" : ""}/details/${id}`);
+      const url = `/${entity.endsWith('y') ? entity.slice(0, -1) + 'ies' : entity + (entity.slice(-1) != "s" ? "s" : "")}/details/${id}`
+      await this.$router.push(url)
       console.log("GO TO ENTITY FUNC " + entity);
     },
     async getRelatedEntity(url, key) {
@@ -132,6 +129,7 @@ export default {
           'Access-Control-Allow-Origin': '*'
         };
         const req = await axios.get(url.href, { headers: headers });
+        console.log(req.config.url)
         console.log(req.data._embedded)
         if (req.data._embedded !== "undefined") this.relatedEntity[`${key}`] = [await req.data]
         else {
@@ -168,6 +166,9 @@ export default {
       await this.getEntry();
     }
   },
+  components : {
+    FooterComponent,
+  },
   computed: {
     formattedPrice() {
       if (this.entity && this.entity.price) {
@@ -194,6 +195,7 @@ export default {
 <style scoped>
 .card-body {
   width: fit-content;
+  min-width: 300px;
 }
 
 .card-title {

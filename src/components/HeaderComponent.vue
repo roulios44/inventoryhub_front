@@ -9,11 +9,15 @@
     </button>
 
     <!-- Sidebar (Vertical Menu) -->
-    <div v-if="showHeader"
+    <div v-if="showHeader" 
       :class="{ 'sidebar': isSidebarVisible, 'offcanvas': !isSidebarVisible, 'offcanvas-start': !isSidebarVisible }"
+      class="header"
       tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel" ref="offcanvas">
       <div class="offcanvas-header">
-        <h5 v-on:click="redirectHome" class="offcanvas-title mf-5" id="offcanvasExampleLabel">Inventory Hub</h5>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16">
+          <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+        </svg>       
+        <h5 v-on:click="redirectHome" class="offcanvas-title mf-5" id="offcanvasExampleLabel">Inventory Hub </h5>
         <button v-if="!isSidebarVisible" type="button" class="btn-close" data-bs-dismiss="offcanvas"
           aria-label="Close"></button>
       </div>
@@ -24,13 +28,13 @@
               <a class="nav-link" @click="redirectToService(service.toLowerCase())">{{ service }}</a>
             </li>
           </div>
-          <li>
-            <a class="nav-link" @click="redirectToService('order')">Order</a>
-          </li>
           <li class="nav-item">
             <a class="nav-link" @click="redirectToService('profile')">Profile</a>
           </li>
         </ul>
+        <div class="mt-auto">
+          <button @click="logout" class="btn btn-danger w-100">Logout</button>
+        </div>
       </div>
     </div>
   </div>
@@ -51,7 +55,7 @@ export default {
     const router = useRouter();
     const route = useRoute();
     const allowedEndpoints = ref([]);
-    const isSidebarVisible = ref(window.innerWidth >= 992);
+    const isSidebarVisible = ref(window.innerWidth >= 1750);
     const showHeader = ref(false);
     let offcanvasInstance = null;
 
@@ -84,12 +88,19 @@ export default {
     };
 
     const tabToExclude = (title) => {
-      return title !== "orders";
+      return title !== "";
     };
 
     const handleResize = () => {
-      isSidebarVisible.value = window.innerWidth >= 992;
+      isSidebarVisible.value = window.innerWidth >= 1750;
     };
+    const logout = () => {
+      const allCookies = Cookies.get();
+      for (let cookie in allCookies) {
+        Cookies.remove(cookie);
+      }
+      router.push("/login")
+    }
 
     onMounted(async () => {
       await nextTick(); // Ensure DOM is updated
@@ -124,6 +135,7 @@ export default {
       redirectToService,
       tabToExclude,
       redirectHome,
+      logout,
     };
   }
 };
@@ -171,7 +183,7 @@ body {
   display: none;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 1750px) {
   .sidebar {
     display: none;
   }
@@ -181,9 +193,24 @@ body {
   }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1750px) {
   .btn.btn-primary {
     display: none;
   }
+}
+
+.header{
+  background-color : #244E88; 
+}
+.header a{
+  color: #FFFFFF;
+}
+a{
+  cursor: pointer;
+}
+
+.btn-primary{
+  background-color: #244E88;
+  border-color: #244E88;
 }
 </style>
