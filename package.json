@@ -13,7 +13,10 @@
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "bootstrap-vue": "^2.23.1",
+    "html2pdf.js": "^0.10.2",
     "js-cookie": "^3.0.5",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.3",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
     "vuex": "^4.1.0"

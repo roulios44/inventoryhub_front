@@ -4,24 +4,14 @@
       <div class="card-body">
         <h5 class="card-title">ACCOUNT LOGIN</h5>
         <div class="tab-content">
-          <div
-            class="tab-pane fade show active"
-            id="pills-login"
-            role="tabpanel"
-            aria-labelledby="tab-login"
-          >
+          <div class="tab-pane fade show active" id="pills-login" role="tabpanel" aria-labelledby="tab-login">
             <div class="form-outline mb-4">
               <input type="email" id="loginName" class="form-control" v-model="email" />
               <label class="form-label" for="loginName">Email</label>
             </div>
 
             <div class="form-outline mb-4">
-              <input
-                type="password"
-                id="loginPassword"
-                class="form-control"
-                v-model="password"
-              />
+              <input type="password" id="loginPassword" class="form-control" v-model="password" />
               <label class="form-label" for="loginPassword">Password</label>
             </div>
 
@@ -62,7 +52,6 @@ export default {
           email: this.email,
           password: this.password,
         });
-
         if (response.status === 200) {
           const token = response.data.token;
           const expiresIn = response.data.expiresIn;
@@ -105,7 +94,8 @@ export default {
 .card {
   margin: 0 auto;
   padding: 20px;
-  width: 400px; /* Largeur du formulaire */
+  width: 400px;
+  /* Largeur du formulaire */
   border-radius: 8px;
   background-color: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -162,8 +152,14 @@ a:hover {
 <style>
 /* Style global */
 body {
-  background: linear-gradient(90deg, #b3e5fc, #e1f5fe); /* Couleur de fond dégradée */
-  height: 100vh; /* Assurez-vous que le corps prend toute la hauteur */
+  background: linear-gradient(90deg, #b3e5fc, #e1f5fe);
+  /* Couleur de fond dégradée */
+  height: 100vh;
+  /* Assurez-vous que le corps prend toute la hauteur */
   margin: 0;
+}
+
+.login-page {
+  margin-top: 100px;
 }
 </style>

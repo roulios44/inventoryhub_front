@@ -6,9 +6,10 @@ import ListConsultView from "@/views/ListConsultView.vue";
 import DetailsView from "@/views/DetailsView.vue";
 import OrderView from "@/views/OrderView.vue";
 import OutStockView from "@/views/OutStockView.vue"
-
+import OrderListView from "@/views/OrderListView.vue";
 import CreateComponent from "@/components/CreateComponent.vue";
 import ProfileView from "@/views/ProfileView.vue";
+import OrderDetailsView from "@/views/OrderDetailsView.vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -56,6 +57,17 @@ const router = createRouter({
       path : "/outstock",
       name : "outstock",
       component : OutStockView
+    },
+    {
+      path : "/orders",
+      name : "orders",
+      component : OrderListView
+    },
+    {
+      path : "/order/details/:type/:id",
+      name : "detailsOrder",
+      component : OrderDetailsView
+
     }
   ],
 });

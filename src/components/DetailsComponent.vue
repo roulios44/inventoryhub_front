@@ -32,7 +32,7 @@
                   <ul class="list-group mt-2">
                     <li v-if="filterLinks(key)" class="list-group-item">
                       <p v-for="obj in relatedEntity[`${key}`]" @click="goToEntity(key, obj.id)">{{
-                        obj.id }}</p>
+                        obj.title }}</p>
                     </li>
                   </ul>
                 </div>
@@ -43,6 +43,7 @@
         </div>
       </div>
     </div>
+    <StockConsultComponent v-if="type == 'warehouses'" />
     <FooterComponent />
   </div>
 </template>
@@ -51,6 +52,7 @@
 import axios from "axios";
 import Cookies from 'js-cookie';
 import FooterComponent from "./FooterComponent.vue";
+import StockConsultComponent from "./StockConsultComponent.vue";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 
@@ -103,6 +105,9 @@ export default {
         delete this.entity._links;
         delete this.entity.links.self;
         delete this.entity.links[this.type.slice(0, -1)];
+        delete this.entity.links.orderArticles
+        delete this.entity.links.stocks
+
       } catch (error) {
         if (error.response && (error.response.status === 404 || error.response.status === 403)) {
           this.$router.push("/");
@@ -110,7 +115,7 @@ export default {
       }
     },
     filterLinks(key) {
-      return !(key == "self" || key == this.type.slice(0, -1))
+      return !(key == "self" || key == this.type.slice(0, -1) || key == "orderArticles" || key == "stocks")
     },
     hasOtherKeys() {
       const keys = Object.keys(this.entity.links)
@@ -119,7 +124,6 @@ export default {
     async goToEntity(entity, id) {
       const url = `/${entity.endsWith('y') ? entity.slice(0, -1) + 'ies' : entity + (entity.slice(-1) != "s" ? "s" : "")}/details/${id}`
       await this.$router.push(url)
-      console.log("GO TO ENTITY FUNC " + entity);
     },
     async getRelatedEntity(url, key) {
       try {
@@ -129,8 +133,6 @@ export default {
           'Access-Control-Allow-Origin': '*'
         };
         const req = await axios.get(url.href, { headers: headers });
-        console.log(req.config.url)
-        console.log(req.data._embedded)
         if (req.data._embedded !== "undefined") this.relatedEntity[`${key}`] = [await req.data]
         else {
           this.relatedEntity[`${key}`] = await req.data._embedded
@@ -154,9 +156,6 @@ export default {
         console.error('Error saving changes:', error);
       }
     },
-    addToCart() {
-      console.log(`${this.entity.title || 'Entité'} ajouté au panier`);
-    },
     formatKey(key) {
       return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
     },
@@ -166,8 +165,9 @@ export default {
       await this.getEntry();
     }
   },
-  components : {
+  components: {
     FooterComponent,
+    StockConsultComponent,
   },
   computed: {
     formattedPrice() {

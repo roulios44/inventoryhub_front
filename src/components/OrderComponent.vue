@@ -29,14 +29,16 @@
                     <select v-model="orderItem.warehouse" @change="updateMaxQuantity(index)" class="form-select">
                         <option :value="null">Select a Warehouse</option>
                         <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse">
-                            {{ warehouse.title }} (Stock: {{ getStockForWarehouseAndArticle(warehouse, orderItem.article) }})
+                            {{ warehouse.title }} (Stock: {{ getStockForWarehouseAndArticle(warehouse,
+                                orderItem.article) }})
                         </option>
                     </select>
                 </div>
-
                 <div class="col-md-2">
-                    <input type="number" :max="orderItem.maxQuantity ? orderItem.maxQuantity : 0" :min="orderItem.maxQuantity ? 1 : 0" v-model.number="orderItem.quantity" @input="updatePrice(index)"
-                        class="form-control" placeholder="Quantity">
+                    <input type="number"
+                        :max="orderItem.maxQuantity && orderType === 'Client' ? orderItem.maxQuantity : null"
+                        :min="orderItem.maxQuantity ? 1 : 0" v-model.number="orderItem.quantity"
+                        @input="updatePrice(index)" class="form-control" placeholder="Quantity">
                 </div>
                 <div class="col-md-2">
                     <input type="text" class="form-control" :value="orderItem.unitPrice.toFixed(2)" readonly>
@@ -75,15 +77,14 @@
                     <h3>Total: {{ total.toFixed(2) }}€</h3>
                 </div>
             </div>
-            {{ orderItems }}
-
             <!--Customer Select-->
             <div class="row" v-if="orderType == 'client'">
                 <div class="col-md-4">
                     <label for="customer" class="form-label">Customer :</label>
                     <select id="customer" v-model="orderCustomer" class="form-select" required>
                         <option :value="null">Select a customer</option>
-                        <option v-for="customer in customers" :key="customer.id" :value="customer.id">{{ customer.title }}</option>
+                        <option v-for="customer in customers" :key="customer.id" :value="customer.id">{{ customer.title
+                            }}</option>
                     </select>
                 </div>
             </div>
@@ -117,10 +118,10 @@ export default {
                 unitPrice: 0,
                 linePrice: 0
             }],
-            orderType: 'client', 
-            selectedWarehouse: null, 
-            orderCustomer : null,
-            customers : [],
+            orderType: 'client',
+            selectedWarehouse: null,
+            orderCustomer: null,
+            customers: [],
         };
     },
     computed: {
@@ -138,6 +139,7 @@ export default {
                 };
                 const response = await axios.get(`${apiUrl}/articles/all`, { headers: headers });
                 this.articles = response.data;
+                console.log(this.articles)
             } catch (error) {
                 console.error("Erreur lors de la récupération des articles :", error);
                 if (error.response && error.response.status === 404) {
@@ -176,7 +178,7 @@ export default {
                     this.warehouses.forEach(warehouse => {
                         requests.push(
                             axios.get(
-                                `${apiUrl}/stocks/findByArticleWarehouse?articleId=${article.id}&warehouseId=${warehouse.id}`, 
+                                `${apiUrl}/stocks/findByArticleWarehouse?articleId=${article.id}&warehouseId=${warehouse.id}`,
                                 { headers: headers }
                             ).then(response => ({
                                 articleId: article.id,
@@ -193,17 +195,17 @@ export default {
                 console.error("Erreur lors de la récupération des stocks :", error);
             }
         },
-        async getCustomers(){
-            try{
+        async getCustomers() {
+            try {
                 const headers = {
                     "Authorization": "Bearer " + Cookies.get("token"),
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 };
-                const req = await axios.get(`${apiUrl}/customers/all`,{headers : headers})
+                const req = await axios.get(`${apiUrl}/customers/all`, { headers: headers })
                 this.customers = await req.data
                 console.log(this.customers)
-            }catch(error){
+            } catch (error) {
                 console.error("error while getting customers", error)
             }
         },
@@ -260,35 +262,22 @@ export default {
         getPriceLabel(article) {
             return this.orderType === 'client' ? `${article.price}€ (Client)` : `${article.supplierPrice}€ (Fournisseur)`;
         },
-        submitOrder() {
+        async submitOrder() {
             if (this.orderType === 'client' && !this.orderCustomer) {
-            alert("Please select a customer before placing the order.");
-            return; // Empêche la soumission du formulaire
-        }
-            try{
+                alert("Please select a customer before placing the order.");
+                return
+            }
+            try {
+                const headers = {
+                    "Authorization": "Bearer " + Cookies.get("token"),
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                };
                 const customer = this.customers.filter((customer) => customer.id == this.orderCustomer)[0]
-                const order = {
-                    "orderNumber": "12345",
-                    "totalPrice": this.total,
-                    "delivery_adress": customer.adresse,
-                    "delivery_postcode": customer.codePostal,
-                    "delivery_country": customer.pays,
-                    "customerId": this.orderCustomer,
-                    "stateId": 1,
-                    "typeId": 1,
-                    "userId": JSON.parse(Cookies.get("user")).id,
-                    "articles": this.orderItems.map((article)=> {
-                        return {
-                            "articleId" : article.article.id,
-                            "quantity" : article.quantity,
-                            "warehouseId" : article.warehouse.id
-                        }
-                    })
-                }
+                const order = this.orderType == 'client' ? this.customerOrder() : this.supplierOrder()
                 console.log(order)
-
-
-
+                const req = await axios.post(`${apiUrl}/api/${this.orderType == "client" ? "client-orders" : "supplier-orders"}`, order, { headers: headers })
+                console.log(req.config.url)
             } catch (error) {
                 console.error("Erreur lors de la récupération des articles :", error);
                 if (error.response && error.response.status === 404) {
@@ -296,34 +285,67 @@ export default {
                 }
             }
             const headers = {
-                    "Authorization": "Bearer " + Cookies.get("token"),
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                };
-        },
-        generateCustomerOrderData(){
-            return {
-                idCustomer: this.customers.filter((customer) => customer.id == this.orderCustomer)[0],        
-                userId: JSON.parse(Cookies.get("user")).id,            
-                typeId: 1,            
-                articles: this.orderItems.map((article)=> {
-                        return {
-                            "articleId" : article.article.id,
-                            "quantity" : article.quantity,
-                            "warehouseId" : article.warehouse.id
-                        }
-                    })
+                "Authorization": "Bearer " + Cookies.get("token"),
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
             };
         },
-        generateSupplierOrderData(){
-            const supplierOrderData = {
-                userId: JSON.parse(Cookies.get("user")).id,           
-                warehouseId: 3,        
-                typeId: 1,            
-                articles: this.orderItems.map((article)=> {
+
+        customerOrder() {
+            const customer = this.customers.filter((customer) => customer.id == this.orderCustomer)[0]
+            const order = {
+                "stateId": 1,
+                "typeId": 1,
+                "userId": JSON.parse(Cookies.get("user")).id,
+                "idCustomer": customer.id,
+                "articles": this.orderItems.map((article) => {
                     return {
-                        "articleId" : article.article.id,
-                        "quantity" : article.quantity,
+                        "articleId": article.article.id,
+                        "quantity": article.quantity,
+                        "warehouseId": article.warehouse.id
+                    }
+                })
+            }
+            return order
+        },
+        supplierOrder() {
+            const order = {
+                "stateId": 1,
+                "typeId": 2,
+                "userId": JSON.parse(Cookies.get("user")).id,
+                "warehouseId": this.selectedWarehouse.id,
+                "articles": this.orderItems.map((article) => {
+                    return {
+                        "articleId": article.article.id,
+                        "quantity": article.quantity,
+                    }
+                })
+            }
+            return order
+        },
+        generateCustomerOrderData() {
+            return {
+                idCustomer: this.customers.filter((customer) => customer.id == this.orderCustomer)[0],
+                userId: JSON.parse(Cookies.get("user")).id,
+                typeId: 1,
+                articles: this.orderItems.map((article) => {
+                    return {
+                        "articleId": article.article.id,
+                        "quantity": article.quantity,
+                        "warehouseId": article.warehouse.id
+                    }
+                })
+            };
+        },
+        generateSupplierOrderData() {
+            const supplierOrderData = {
+                userId: JSON.parse(Cookies.get("user")).id,
+                warehouseId: 3,
+                typeId: 1,
+                articles: this.orderItems.map((article) => {
+                    return {
+                        "articleId": article.article.id,
+                        "quantity": article.quantity,
                     }
                 })
             };

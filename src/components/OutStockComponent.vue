@@ -29,6 +29,7 @@
                 </div>
             </div>
         </div>
+
         <div class="filter-section mb-4">
             <label for="filter">Article's stock state :</label>
             <select id="filter" v-model="selectedFilter" class="form-select">
@@ -41,24 +42,30 @@
         <div class="articles-section">
             <h3>Articles list</h3>
             <label v-if="selectedFilter != 'noStock'" for="warehouseFilter">Select a warehouse :</label>
-            <select class="form-select" id="warehouseFilter" v-model="selectedWarehouseId" v-if="selectedFilter != 'noStock'">
+            <select class="form-select" id="warehouseFilter" v-model="selectedWarehouseId"
+                v-if="selectedFilter != 'noStock'">
                 <option disabled value=""></option>
-                <option 
-                    v-for="warehouse in distinctWarehouses" 
-                    :key="warehouse.warehouseId" 
+                <option v-for="warehouse in distinctWarehouses" :key="warehouse.warehouseId"
                     :value="warehouse.warehouseId">
                     {{ warehouse.warehouseTitle }}
                 </option>
             </select>
-            <ul>
-                <li v-for="article in filteredArticles" :key="article.articleId">
-                    <p>{{ article.articleTitle }} - {{ article.stockQuantity }} in stock</p><br>
-                    <span v-if="selectedFilter !== 'noStock'">
-                        In <strong>{{ article.warehouseTitle }}</strong> warehouse
-                    </span>
-                    <span v-else>
-                        This article has never been in stock in a warehouse
-                    </span>
+
+            <!-- Liste stylée des articles -->
+            <ul class="list-group mt-3">
+                <li class="list-group-item d-flex justify-content-between align-items-center"
+                    v-for="article in filteredArticles" :key="article.articleId">
+                    <div>
+                        <p class="mb-1 fw-bold">{{ article.articleTitle }}</p>
+                        <p class="text-muted">{{ article.stockQuantity }} in stock</p>
+                        <span v-if="selectedFilter !== 'noStock'">
+                            In <strong>{{ article.warehouseTitle }}</strong> warehouse
+                        </span>
+                        <span v-else>
+                            This article has never been in stock in a warehouse
+                        </span>
+                    </div>
+                    <span v-if="article.stockQuantity === 0" class="badge bg-danger">Out of stock</span>
                 </li>
             </ul>
         </div>
@@ -123,7 +130,7 @@ export default {
                 this.articlesNoStock = res.articlesOutOfStock.filter(article => article.warehouseId == null);
                 this.totalArticles = res.totalArticles;
                 this.articlesNearNoStock = res.articleNearOut;
-                
+
                 this.updateDistinctWarehouses();
             } catch (error) {
                 console.error('Failed to fetch allowed endpoints', error);
@@ -191,5 +198,24 @@ export default {
     border: 1px solid #ddd;
     margin-bottom: 5px;
     border-radius: 4px;
+}
+
+.articles-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.articles-section li {
+    padding: 15px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.articles-section .badge {
+    font-size: 0.9rem;
 }
 </style>
