@@ -10,6 +10,7 @@
 
           <button v-if="!isEditing" class="btn btn-secondary mt-3" @click="isEditing = true">Edit</button>
           <button v-if="isEditing" class="btn btn-primary mt-3" @click="saveChanges">Save</button>
+          <button class="btn btn-danger mt-3" data-bs-toggle="modal" data-bs-target="#deleteModal">Supprimer</button> <!-- Bouton Supprimer -->
 
           <ul class="list-group list-group-flush">
             <div v-for="(value, key) in entity" :key="key">
@@ -38,13 +39,31 @@
                 </div>
               </div>
             </li>
-
           </ul>
         </div>
       </div>
     </div>
     <StockConsultComponent v-if="type == 'warehouses'" />
     <FooterComponent />
+
+    <!-- Modal de confirmation de suppression -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteModalLabel">Confirmer la suppression</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Êtes-vous sûr de vouloir supprimer cet élément ?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-danger" @click="deleteEntity" data-bs-dismiss="modal">Oui, supprimer</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -116,6 +135,22 @@ export default {
     },
     filterLinks(key) {
       return !(key == "self" || key == this.type.slice(0, -1) || key == "orderArticles" || key == "stocks")
+    },
+    async deleteEntity(){
+      try{
+        const headers = {
+          "Authorization": "Bearer " + Cookies.get("token"),
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        };
+        const req = await axios.delete(`${apiUrl}/${this.type}/${this.entityID}`, { headers: headers });
+        const res = await req.data
+        if(req.status == 200){
+          this.$router.push(`/${this.type}`)
+        }
+      }catch(e){
+        console.error(e)
+      }
     },
     hasOtherKeys() {
       const keys = Object.keys(this.entity.links)

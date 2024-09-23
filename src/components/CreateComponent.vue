@@ -10,9 +10,18 @@
             <label :for="field.name" class="form-label text-secondary" v-if="field.type != 'Long'">
               {{ field.name }}
             </label>
-            <input v-if="detectedNonNative(field.type)" :type="field.name === 'password' ? 'password' : 'text'"
-              :id="field.name" class="form-control" v-model="field.value" :placeholder="field.name"
-              :required="field.type != 'image'" />
+            <input
+      v-if="detectedNonNative(field.type)"
+      :type="field.name === 'password' ? 'password' : 'text'"
+      :id="field.name"
+      class="form-control"
+      v-model="field.value"
+      :placeholder="field.name"
+      :required="field.type != 'image'"
+    />
+    <p v-if="field.name==='password' && !isValidPassword(field.value) " style="color: red;">
+      Le mot de passe doit comporter au moins 12 caractères, avec au moins une minuscule, une majuscule, un chiffre et un caractère spécial.
+    </p>
           </div>
         </div>
 
@@ -108,6 +117,10 @@ export default {
         }
       }
     },
+    isValidPassword(password) {
+      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#!%*?&])[A-Za-z\d@$#!%*?&]{12,}$/;
+      return regex.test(password);
+    },
     async createEntity() {
       const filteredStructure = this.structure.filter(
         (field) => field.type !== "Long"
@@ -134,12 +147,17 @@ export default {
               : this.type + "s"
             }`);
         if (this.type === "article") url += "/create"
-        await axios.post(url, data, {
+        const req = await axios.post(url, data, {
           headers: headers,
         });
 
-        this.showSuccess = true;
-        this.showError = false;
+        if(req.status == 201){
+          const res = await req.data  
+          this.showSuccess = true;
+          this.showError = false;
+          this.$router.push(`/${this.type.endsWith("y")? this.type.slice(0, -1) + "ies": this.type + "s"}/details/${res.id}`)
+        }
+
       } catch (error) {
         console.error("Erreur lors de l'enregistrement :", error);
         this.showSuccess = false;
