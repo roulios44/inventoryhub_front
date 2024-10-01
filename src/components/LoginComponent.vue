@@ -56,7 +56,6 @@ export default {
           const token = response.data.token;
           const expiresIn = response.data.expiresIn;
           const expirationDate = new Date(new Date().getTime() + expiresIn);
-          console.log(response.data);
           Cookies.set("token", token, {
             expires: expirationDate,
             secure: false,

@@ -4,21 +4,43 @@
       <!-- Barre de recherche -->
       <div class="container py-3">
         <div class="d-flex justify-content-center mb-4">
-          <input type="text" class="form-control w-75" v-model="searchQuery" @input="searchEntity"
-            :placeholder="'Search ' + type" :aria-label="'Search ' + type" />
-          <button class="btn btn-primary rounded-circle ms-2" type="button" @click="redirectCreate">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus"
-              viewBox="0 0 16 16">
+          <input
+            type="text"
+            class="form-control w-75"
+            v-model="searchQuery"
+            @input="searchEntity"
+            :placeholder="'Search ' + type"
+            :aria-label="'Search ' + type"
+          />
+          <button
+            class="btn btn-primary rounded-circle ms-2"
+            type="button"
+            @click="redirectCreate"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="currentColor"
+              class="bi bi-plus"
+              viewBox="0 0 16 16"
+            >
               <path
-                d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"
+              />
             </svg>
           </button>
         </div>
 
         <!-- Liste des fournisseurs -->
         <ul class="list-group">
-          <li class="list-group-item d-flex justify-content-between align-items-center"
-            v-for="entity in filteredEntities" :key="entity.id" @click="toDetails(entity.id)">
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center"
+            v-for="entity in filteredEntities"
+            :key="entity.id"
+            @click="toDetails(entity.id)"
+          >
+            <span v-if="type=='users'">{{ entity.email }}</span>
             <span>{{ entity.title }}</span>
             <span>{{ entity.description }}</span>
           </li>
@@ -62,7 +84,6 @@ export default {
           "Access-Control-Allow-Origin": "*",
         };
         const req = await axios.get(`${apiUrl}/${type.value}`, { headers });
-        console.log(req.config.url)
         const res = req.data;
         entities.value = res._embedded[type.value];
         filteredEntities.value = entities.value;

@@ -139,7 +139,6 @@ export default {
                 };
                 const response = await axios.get(`${apiUrl}/articles/all`, { headers: headers });
                 this.articles = response.data;
-                console.log(this.articles)
             } catch (error) {
                 console.error("Erreur lors de la récupération des articles :", error);
                 if (error.response && error.response.status === 404) {
@@ -204,7 +203,6 @@ export default {
                 };
                 const req = await axios.get(`${apiUrl}/customers/all`, { headers: headers })
                 this.customers = await req.data
-                console.log(this.customers)
             } catch (error) {
                 console.error("error while getting customers", error)
             }
@@ -275,9 +273,7 @@ export default {
                 };
                 const customer = this.customers.filter((customer) => customer.id == this.orderCustomer)[0]
                 const order = this.orderType == 'client' ? this.customerOrder() : this.supplierOrder()
-                console.log(order)
                 const req = await axios.post(`${apiUrl}/api/${this.orderType == "client" ? "client-orders" : "supplier-orders"}`, order, { headers: headers })
-                console.log(req.config.url)
             } catch (error) {
                 console.error("Erreur lors de la récupération des articles :", error);
                 if (error.response && error.response.status === 404) {

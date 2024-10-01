@@ -53,7 +53,7 @@
                     <div class="card">
                         <div class="card-body text-center">
                             <h3>{{ articlesNearNoStock.length }}</h3>
-                            <p>Produits bientôt en rupture</p>
+                            <p>Products soon to be sold out</p>
                         </div>
                     </div>
                 </div>
@@ -108,7 +108,6 @@ export default {
       try {
         const req = await axios.get(apiUrl + '/articles/homePage', { headers });
         const res = await req.data
-        console.log(await req.status)
         this.articlesOutOfStock = res.articlesOutOfStock.filter((article) => article.warehouseId != null && article.stockQuantity == 0)
         this.articlesNoStock = await res.articlesOutOfStock.filter((article) => article.warehouseId == null)
         this.totalArticles = res.totalArticles

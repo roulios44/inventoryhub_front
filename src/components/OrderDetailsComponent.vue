@@ -107,9 +107,7 @@ export default {
                 this.entity = req.data;
                 this.entity.links = this.entity._links;
                 await this.getRelatedInfo()
-                console.log(Array.isArray(this.entity.articles))
                 this.entity.articles.forEach(async (art) => {
-                    console.log(art.articleId)
                     art.title = await this.getArticleName(art.articleId)
                 });
                 delete this.entity._links;

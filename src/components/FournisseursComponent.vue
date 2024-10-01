@@ -66,7 +66,6 @@ export default {
         }
         const req = await axios.post(contextApiUrl,data)
         const res = await req.data
-        console.log(res)
         this.getAllFournisseurs()
       },
       async deleteFourniseur(id){
